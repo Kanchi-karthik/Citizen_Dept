@@ -5,6 +5,8 @@ import "../styles/app.css";
 const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
   // Function to exit from department UI
   const exitDepartment = () => {
+    // Clear department authentication
+    localStorage.removeItem('department');
     // Navigate to the home page or main dashboard
     window.location.href = '/';
   };
@@ -29,11 +31,11 @@ const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
 
       <div className="sidebar-nav">
         <button 
-          className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
+          className={`sidebar-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dashboard')}
         >
-          <Eye size={20} />
-          <span className="label">Overview</span>
+          <BarChart3 size={20} />
+          <span className="label">Dashboard</span>
         </button>
 
         <button 
@@ -42,6 +44,14 @@ const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
         >
           <AlertCircle size={20} />
           <span className="label">Complaints</span>
+        </button>
+
+        <button 
+          className={`sidebar-nav-item ${activeTab === 'status' ? 'active' : ''}`}
+          onClick={() => setActiveTab('status')}
+        >
+          <CheckCircle2 size={20} />
+          <span className="label">Status Management</span>
         </button>
 
         <button 
@@ -61,11 +71,11 @@ const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
         </button>
 
         <button 
-          className={`sidebar-nav-item ${activeTab === 'status' ? 'active' : ''}`}
-          onClick={() => setActiveTab('status')}
+          className={`sidebar-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
         >
-          <CheckCircle2 size={20} />
-          <span className="label">Status Update</span>
+          <Eye size={20} />
+          <span className="label">Settings</span>
         </button>
       </div>
 

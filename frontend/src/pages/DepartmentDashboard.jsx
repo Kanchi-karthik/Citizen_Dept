@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { MapPin, TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Eye, Star, Package, X, Menu } from "lucide-react";
+import { MapPin, TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Eye, Star, Package, X, Menu, Trash2 } from "lucide-react";
 import API from "../services/api";
 import DepartmentSidebar from "../components/DepartmentSidebar";
 import PerformanceForm from "./PerformanceForm";
@@ -18,7 +18,7 @@ const DepartmentDashboard = () => {
   const [resources, setResources] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState({
     totalComplaints: 0,
     resolvedComplaints: 0,
@@ -33,10 +33,17 @@ const DepartmentDashboard = () => {
     resolutionDescription: '',
     resolutionImages: [],
     departmentNotes: '',
-    imagePreviews: []
+    imagePreviews: [],
+    status: 'Pending',
+    priority: 'Normal',
+    progressPercentage: 0,
+    assignedTo: '',
+    remarks: ''
   });
   const [showResolutionForm, setShowResolutionForm] = useState(false);
   const [editingComplaintId, setEditingComplaintId] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [users, setUsers] = useState([]);
   
   // State for sidebar toggle
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -46,6 +53,21 @@ const DepartmentDashboard = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Check if department is authenticated
+        const storedDepartment = localStorage.getItem('department');
+        if (!storedDepartment) {
+          // Redirect to login
+          navigate(`/department-login/${id}`);
+          return;
+        }
+        
+        const departmentData = JSON.parse(storedDepartment);
+        if (departmentData._id !== id) {
+          // Redirect to login
+          navigate(`/department-login/${id}`);
+          return;
+        }
         
         console.log("Fetching department with ID:", id);
         
@@ -72,6 +94,10 @@ const DepartmentDashboard = () => {
           setResources(resData);
         }
 
+        // Fetch users for assignment dropdown
+        const usersRes = await API.get('/users');
+        setUsers(usersRes.data);
+
         // Calculate stats for all statuses
         const total = complaintRes.data.length;
         const resolved = complaintRes.data.filter(c => c.status === 'Resolved').length;
@@ -97,7 +123,7 @@ const DepartmentDashboard = () => {
     if (id) {
       fetchDashboardData();
     }
-  }, [id]);
+  }, [id, navigate]);
 
   const updateComplaintStatus = async (complaintId, newStatus) => {
     try {
@@ -144,6 +170,37 @@ const DepartmentDashboard = () => {
       case 'In Progress': return 'Resolved';
       default: return 'Pending';
     }
+  };
+
+  const getComplaintProgress = (status) => {
+    switch (status) {
+      case 'Pending': return 25;
+      case 'In Progress': return 75;
+      case 'Resolved': return 100;
+      default: return 0;
+    }
+  };
+
+  const getProgressColor = (status) => {
+    switch (status) {
+      case 'Pending': return '#ffa726';
+      case 'In Progress': return '#2196f3';
+      case 'Resolved': return '#00897b';
+      default: return '#9e9e9e';
+    }
+  };
+
+  const openStatusUpdateForm = (complaint) => {
+    // Set the complaint in the resolution form and show it
+    setEditingComplaintId(complaint._id);
+    setResolutionForm({
+      resolutionDays: '',
+      resolutionDescription: '',
+      resolutionImages: [],
+      departmentNotes: '',
+      imagePreviews: []
+    });
+    setShowResolutionForm(true);
   };
 
   const openResolutionForm = (complaintId, currentData = {}) => {
@@ -252,12 +309,30 @@ const DepartmentDashboard = () => {
   const submitResolutionDetails = async (e) => {
     e.preventDefault();
     try {
+      // First, update the complaint status
+      await API.put(`/complaints/${editingComplaintId}/status`, { 
+        status: resolutionForm.status
+      });
+      
       const formData = {
         ...resolutionForm,
         resolutionDays: resolutionForm.resolutionDays === '' ? 0 : parseInt(resolutionForm.resolutionDays) || 0
       };
       
       const res = await API.post(`/complaints/${editingComplaintId}/resolution-update`, formData);
+      
+      // Also create a status update record
+      const statusUpdateData = {
+        complaintID: editingComplaintId,
+        departmentID: id,
+        status: resolutionForm.status,
+        priority: resolutionForm.priority,
+        progressPercentage: resolutionForm.progressPercentage,
+        assignedTo: resolutionForm.assignedTo,
+        remarks: resolutionForm.remarks
+      };
+      
+      await API.post('/departments/status', statusUpdateData);
       
       // Update the complaint in the local state by adding the new resolution update
       setComplaints(prevComplaints => 
@@ -284,7 +359,22 @@ const DepartmentDashboard = () => {
         setSelectedComplaint(updatedComplaint);
       }
       
-      alert('Resolution update added successfully');
+      // Reset form and close modal
+      setResolutionForm({
+        resolutionDays: '',
+        resolutionDescription: '',
+        resolutionImages: [],
+        departmentNotes: '',
+        imagePreviews: [],
+        status: 'Pending',
+        priority: 'Normal',
+        progressPercentage: 0,
+        assignedTo: '',
+        remarks: ''
+      });
+      setCurrentStep(1);
+      
+      alert('Resolution update and status added successfully');
       closeResolutionForm();
     } catch (err) {
       console.error("Error adding resolution update:", err);
@@ -301,7 +391,7 @@ const DepartmentDashboard = () => {
     { name: 'Resolved', value: stats.resolvedComplaints, fill: '#00897b' },
     { name: 'Pending', value: stats.pendingComplaints, fill: '#ffa726' },
     { name: 'In Progress', value: stats.inProgressComplaints, fill: '#2196f3' },
-  ].filter(item => item.value > 0); // Only show statuses that have complaints
+  ]; // Show all statuses, even with zero values
 
   // Chart data for complaints over time
   const complaintTrendData = [
@@ -345,13 +435,11 @@ const DepartmentDashboard = () => {
       )}
       
       <div className={`dashboard-main-content ${!sidebarOpen ? 'sidebar-closed' : ''}`}>
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
           <div className="form-container">
-            <div>
-              <h1 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>{department?.departmentName}</h1>
-              <p className="text-muted">Department Head: {department?.headName || 'N/A'}</p>
-            </div>
+            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>{department?.departmentName} - Visualization Dashboard</h2>
+            <p className="text-muted" style={{ marginBottom: '2rem' }}>Comprehensive overview of department performance and complaint analytics</p>
             
             {/* KPI Cards */}
             <div className="kpi-grid">
@@ -388,7 +476,7 @@ const DepartmentDashboard = () => {
 
               <div className="kpi-card">
                 <div className="kpi-icon avg">
-                  <Clock size={24} />
+                  <TrendingUp size={24} />
                 </div>
                 <div className="kpi-content">
                   <p className="kpi-label">In Progress</p>
@@ -398,7 +486,7 @@ const DepartmentDashboard = () => {
 
               <div className="kpi-card">
                 <div className="kpi-icon avg">
-                  <TrendingUp size={24} />
+                  <Clock size={24} />
                 </div>
                 <div className="kpi-content">
                   <p className="kpi-label">Avg Resolution Time</p>
@@ -413,7 +501,7 @@ const DepartmentDashboard = () => {
               {/* Complaint Status Chart */}
               <div className="chart-card">
                 <h3>Complaint Status Distribution</h3>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
                       data={complaintStatusData}
@@ -421,7 +509,7 @@ const DepartmentDashboard = () => {
                       cy="50%"
                       labelLine={false}
                       label={(entry) => `${entry.name}: ${entry.value}`}
-                      outerRadius={100}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -432,12 +520,17 @@ const DepartmentDashboard = () => {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+                {complaintStatusData.length === 0 && (
+                  <div className="empty-state">
+                    <p>No complaint data available for visualization</p>
+                  </div>
+                )}
               </div>
 
               {/* Complaint Trend Chart */}
               <div className="chart-card">
                 <h3>Complaints Trend (6 Months)</h3>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={complaintTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
@@ -446,29 +539,38 @@ const DepartmentDashboard = () => {
                     <Line type="monotone" dataKey="complaints" stroke="#005b5f" strokeWidth={2} dot={{ fill: '#005b5f', r: 5 }} />
                   </LineChart>
                 </ResponsiveContainer>
+                {complaintTrendData.length === 0 && (
+                  <div className="empty-state">
+                    <p>No trend data available for visualization</p>
+                  </div>
+                )}
               </div>
 
               {/* Complaints by Location */}
-              {locationData.length > 0 && (
-                <div className="chart-card">
-                  <h3>Complaints by Location</h3>
-                  <ResponsiveContainer width="100%" height={300}>
+              <div className="chart-card">
+                <h3>Complaints by Location</h3>
+                {locationData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={locationData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="location" angle={-45} textAnchor="end" height={80} />
+                      <XAxis dataKey="location" angle={-45} textAnchor="end" height={60} />
                       <YAxis />
                       <Tooltip />
                       <Bar dataKey="complaints" fill="#00897b" />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
-              )}
+                ) : (
+                  <div className="empty-state">
+                    <p>No location data available for visualization</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Performance Metrics */}
-            {performance && (
-              <div className="performance-card">
-                <h3>Performance Metrics</h3>
+            <div className="performance-card">
+              <h3>Performance Metrics</h3>
+              {performance ? (
                 <div className="metrics-grid">
                   <div className="metric">
                     <label>Satisfaction Score</label>
@@ -487,16 +589,91 @@ const DepartmentDashboard = () => {
                     <div className="metric-value">{performance.performanceRating}</div>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="empty-state">
+                  <p>No performance data available</p>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Complaints Table */}
+            <div className="recent-complaints">
+              <h3>Recent Complaints</h3>
+              {complaints.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Complaint ID</th>
+                        <th>Title</th>
+                        <th>User</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {complaints.slice(0, 5).map((complaint) => (
+                        <tr key={complaint._id}>
+                          <td><code>{complaint.complaintId}</code></td>
+                          <td><strong>{complaint.title}</strong></td>
+                          <td>{complaint.user?.fullName || 'N/A'}</td>
+                          <td>{complaint.location || 'N/A'}</td>
+                          <td>
+                            <span className={`badge ${
+                              complaint.status === 'Resolved' ? 'bg-success' : 
+                              complaint.status === 'Pending' ? 'bg-warning' : 
+                              complaint.status === 'In Progress' ? 'bg-info' : 'bg-secondary'
+                            }`}>
+                              {complaint.status}
+                            </span>
+                          </td>
+                          <td>{new Date(complaint.createdAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <p>No complaints available</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Complaints Tab */}
+        {/* Complaints & Status Tab */}
         {activeTab === 'complaints' && (
           <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Department Complaints</h2>
+            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Complaints & Status Management</h2>
+            <p className="text-muted" style={{ marginBottom: '2rem' }}>Track complaints and update their status in a 3-step verification process</p>
             
+            {/* 3-Step Complaint Status Tracker */}
+            <div className="performance-card" style={{ marginBottom: '2rem' }}>
+              <h3>Complaint Status Tracker</h3>
+              <div className="metrics-grid">
+                <div className="metric">
+                  <label>Total Complaints</label>
+                  <div className="metric-value">{stats.totalComplaints}</div>
+                </div>
+                <div className="metric">
+                  <label>Pending Review</label>
+                  <div className="metric-value">{stats.pendingComplaints}</div>
+                </div>
+                <div className="metric">
+                  <label>In Progress</label>
+                  <div className="metric-value">{stats.inProgressComplaints}</div>
+                </div>
+                <div className="metric">
+                  <label>Resolved</label>
+                  <div className="metric-value">{stats.resolvedComplaints}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Complaints with Status Updates */}
+            <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Complaints List</h3>
             {complaints.length === 0 ? (
               <div className="empty-state">
                 <p>No complaints found for this department.</p>
@@ -511,6 +688,7 @@ const DepartmentDashboard = () => {
                       <th>User</th>
                       <th>Location</th>
                       <th>Status</th>
+                      <th>Progress</th>
                       <th>Date</th>
                       <th>Actions</th>
                     </tr>
@@ -531,25 +709,33 @@ const DepartmentDashboard = () => {
                             {complaint.status}
                           </span>
                         </td>
+                        <td>
+                          <div className="progress" style={{ height: '10px' }}>
+                            <div 
+                              className="progress-bar" 
+                              style={{
+                                width: `${getComplaintProgress(complaint.status)}%`,
+                                backgroundColor: getProgressColor(complaint.status)
+                              }}
+                            ></div>
+                          </div>
+                          <small className="text-muted">{getComplaintProgress(complaint.status)}%</small>
+                        </td>
                         <td>{new Date(complaint.createdAt).toLocaleDateString()}</td>
                         <td>
                           <button 
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => viewComplaintDetails(complaint._id)}
+                            style={{ marginBottom: '0.25rem' }}
                           >
                             View
                           </button>
                           <button 
-                            className="btn btn-sm btn-outline-secondary ml-2"
-                            onClick={() => updateComplaintStatus(complaint._id, getNextStatus(complaint.status))}
-                          >
-                            {getNextStatus(complaint.status)}
-                          </button>
-                          <button 
                             className="btn btn-sm btn-outline-info ml-2"
-                            onClick={() => openResolutionForm(complaint._id, complaint)}
+                            onClick={() => openStatusUpdateForm(complaint)}
+                            style={{ marginBottom: '0.25rem' }}
                           >
-                            Resolution
+                            Update Status
                           </button>
                         </td>
                       </tr>
@@ -558,6 +744,14 @@ const DepartmentDashboard = () => {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Status Tab */}
+        {activeTab === 'status' && (
+          <div className="form-container">
+            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Status Management</h2>
+            <StatusUpdateForm departmentId={id} />
           </div>
         )}
 
@@ -577,13 +771,70 @@ const DepartmentDashboard = () => {
           </div>
         )}
 
-        {/* Status Tab */}
-        {activeTab === 'status' && (
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
           <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Status Update</h2>
-            <StatusUpdateForm departmentId={id} />
+            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Department Settings</h2>
+            <div className="settings-container">
+              <div className="settings-section">
+                <h3>Department Information</h3>
+                <p>Manage your department's profile and settings.</p>
+                <button className="btn btn-danger" onClick={async () => {
+                  if (window.confirm('Are you sure you want to delete this department? This action cannot be undone.')) {
+                    try {
+                      await API.delete(`/departments/${id}`);
+                      alert('Department deleted successfully!');
+                      // Navigate back to home or departments list
+                      navigate('/');
+                    } catch (err) {
+                      console.error('Error deleting department:', err);
+                      alert('Error deleting department: ' + (err.response?.data?.message || err.message));
+                    }
+                  }
+                }}>
+                  <Trash2 size={16} /> Delete Department
+                </button>
+              </div>
+              
+              <div className="settings-section">
+                <h3>Login Credentials</h3>
+                <p>Update your department's login credentials.</p>
+                <button className="btn btn-primary" onClick={() => {
+                  // Navigate to department edit form
+                  setActiveTab('dashboard');
+                  // Scroll to the edit form
+                  setTimeout(() => {
+                    const editForm = document.getElementById('department-edit-form');
+                    if (editForm) {
+                      editForm.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }}>
+                  Update Login Credentials
+                </button>
+              </div>
+              
+              <div className="settings-section">
+                <h3>Preferences</h3>
+                <p>Customize your department panel preferences.</p>
+                <div className="form-group">
+                  <label>
+                    <input type="checkbox" defaultChecked /> 
+                    Enable email notifications
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label>
+                    <input type="checkbox" defaultChecked /> 
+                    Enable SMS notifications
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         )}
+
+
 
         {/* Complaint Detail Modal */}
         {showComplaintModal && selectedComplaint && (
@@ -711,43 +962,185 @@ const DepartmentDashboard = () => {
               <form onSubmit={submitResolutionDetails} className="user-detail-modal-body">
                 <div className="detail-section">
                   <h5>Resolution Information</h5>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label>Days to Resolve *</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={resolutionForm.resolutionDays}
-                        onChange={(e) => setResolutionForm({
-                          ...resolutionForm, 
-                          resolutionDays: e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                        })}
-                        min="0"
-                      />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label>Department Notes</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={resolutionForm.departmentNotes}
-                        onChange={(e) => setResolutionForm({...resolutionForm, departmentNotes: e.target.value})}
-                        placeholder="Internal notes..."
-                      />
+                  
+                  {/* 3-Step Verification Process */}
+                  <div className="step-tracker" style={{ marginBottom: '1.5rem' }}>
+                    <div className="step-progress">
+                      <div className="step-item">
+                        <div className={`step-number ${currentStep >= 1 ? 'active' : ''}`}>1</div>
+                        <div className="step-label">Details</div>
+                      </div>
+                      <div className="step-divider"></div>
+                      <div className="step-item">
+                        <div className={`step-number ${currentStep >= 2 ? 'active' : ''}`}>2</div>
+                        <div className="step-label">Status</div>
+                      </div>
+                      <div className="step-divider"></div>
+                      <div className="step-item">
+                        <div className={`step-number ${currentStep >= 3 ? 'active' : ''}`}>3</div>
+                        <div className="step-label">Confirmation</div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="mb-3">
-                    <label>Resolution Description *</label>
-                    <textarea
-                      className="form-control"
-                      rows="4"
-                      value={resolutionForm.resolutionDescription}
-                      onChange={(e) => setResolutionForm({...resolutionForm, resolutionDescription: e.target.value})}
-                      placeholder="Describe the actions taken to resolve this complaint..."
-                      required
-                    />
-                  </div>
+                  {/* Step 1: Details */}
+                  {currentStep === 1 && (
+                    <>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label>Days to Resolve *</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={resolutionForm.resolutionDays}
+                            onChange={(e) => setResolutionForm({
+                              ...resolutionForm, 
+                              resolutionDays: e.target.value === '' ? '' : parseInt(e.target.value) || 0
+                            })}
+                            min="0"
+                          />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label>Department Notes</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={resolutionForm.departmentNotes}
+                            onChange={(e) => setResolutionForm({...resolutionForm, departmentNotes: e.target.value})}
+                            placeholder="Internal notes..."
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label>Resolution Description *</label>
+                        <textarea
+                          className="form-control"
+                          rows="4"
+                          value={resolutionForm.resolutionDescription}
+                          onChange={(e) => setResolutionForm({...resolutionForm, resolutionDescription: e.target.value})}
+                          placeholder="Describe the actions taken to resolve this complaint..."
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Step 2: Status Update */}
+                  {currentStep === 2 && (
+                    <>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label>Current Status *</label>
+                          <select 
+                            className="form-control"
+                            value={resolutionForm.status}
+                            onChange={(e) => setResolutionForm({...resolutionForm, status: e.target.value})}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="On Hold">On Hold</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                          </select>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label>Priority Level *</label>
+                          <select 
+                            className="form-control"
+                            value={resolutionForm.priority}
+                            onChange={(e) => setResolutionForm({...resolutionForm, priority: e.target.value})}
+                          >
+                            <option value="Low">Low</option>
+                            <option value="Normal">Normal</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label>Progress (%) *</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            className="form-control form-range" 
+                            value={resolutionForm.progressPercentage}
+                            onChange={(e) => setResolutionForm({...resolutionForm, progressPercentage: parseInt(e.target.value)})}
+                          />
+                          <small className="text-muted">{resolutionForm.progressPercentage}%</small>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label>Assigned To</label>
+                          <select 
+                            className="form-control"
+                            value={resolutionForm.assignedTo}
+                            onChange={(e) => setResolutionForm({...resolutionForm, assignedTo: e.target.value})}
+                          >
+                            <option value="">Select person</option>
+                            {users.map(u => (
+                              <option key={u._id} value={u._id}>
+                                {u.fullName} ({u.role})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label>Update Remarks *</label>
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          value={resolutionForm.remarks}
+                          onChange={(e) => setResolutionForm({...resolutionForm, remarks: e.target.value})}
+                          placeholder="Describe the current status and actions taken..."
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Step 3: Confirmation */}
+                  {currentStep === 3 && (
+                    <div className="confirmation-step">
+                      <h5>Review Your Updates</h5>
+                      <div className="review-item">
+                        <strong>Resolution Days:</strong> {resolutionForm.resolutionDays || 'Not specified'}
+                      </div>
+                      <div className="review-item">
+                        <strong>Department Notes:</strong> {resolutionForm.departmentNotes || 'None'}
+                      </div>
+                      <div className="review-item">
+                        <strong>Resolution Description:</strong> {resolutionForm.resolutionDescription || 'None'}
+                      </div>
+                      <div className="review-item">
+                        <strong>Status:</strong> {resolutionForm.status}
+                      </div>
+                      <div className="review-item">
+                        <strong>Priority:</strong> {resolutionForm.priority}
+                      </div>
+                      <div className="review-item">
+                        <strong>Progress:</strong> {resolutionForm.progressPercentage}%
+                      </div>
+                      <div className="review-item">
+                        <strong>Assigned To:</strong> {resolutionForm.assignedTo ? users.find(u => u._id === resolutionForm.assignedTo)?.fullName || 'Unknown' : 'Unassigned'}
+                      </div>
+                      <div className="review-item">
+                        <strong>Remarks:</strong> {resolutionForm.remarks || 'None'}
+                      </div>
+                      
+                      <div className="image-preview-container mt-3">
+                        {resolutionForm.imagePreviews.map((img) => (
+                          <div key={img.id} className="image-preview-item">
+                            <img src={img.src} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="mb-3">
                     <label>Resolution Images</label>
@@ -780,9 +1173,30 @@ const DepartmentDashboard = () => {
                   <button type="button" className="btn btn-secondary" onClick={closeResolutionForm}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    Add Resolution Update
-                  </button>
+                  
+                  {currentStep > 1 && (
+                    <button 
+                      type="button" 
+                      className="btn btn-outline-primary"
+                      onClick={() => setCurrentStep(currentStep - 1)}
+                    >
+                      Back
+                    </button>
+                  )}
+                  
+                  {currentStep < 3 ? (
+                    <button 
+                      type="button" 
+                      className="btn btn-primary"
+                      onClick={() => setCurrentStep(currentStep + 1)}
+                    >
+                      Next
+                    </button>
+                  ) : (
+                    <button type="submit" className="btn btn-success">
+                      Submit Updates
+                    </button>
+                  )}
                 </div>
               </form>
             </div>

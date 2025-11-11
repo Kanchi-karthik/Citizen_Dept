@@ -127,98 +127,83 @@ const ResourceAllocationForm = ({ departmentId }) => {
         }}
       >
         {({ isSubmitting }) => (
-          <Form className="form-container">
-            <div className="form-section">
-              <h4>Resource Details</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Department *</label>
-                  <Field as="select" name="departmentID" className="form-control">
-                    <option value="">Select Department</option>
-                    {depts.map(d => <option key={d._id} value={d._id}>{d.departmentName}</option>)}
-                  </Field>
-                  <ErrorMessage name="departmentID" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Resource Type *</label>
-                  <Field as="select" name="resourceType" className="form-control">
-                    <option value="">Select Type</option>
-                    <option value="Vehicle">Vehicle</option>
-                    <option value="Equipment">Equipment</option>
-                    <option value="Budget">Budget</option>
-                    <option value="Personnel">Personnel</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Infrastructure">Infrastructure</option>
-                    <option value="Other">Other</option>
-                  </Field>
-                  <ErrorMessage name="resourceType" component="div" className="text-danger small" />
-                </div>
+          <Form className="form-container resource-form">
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Department *</label>
+                <Field as="select" name="departmentID" className="form-control">
+                  <option value="">Select Department</option>
+                  {depts.map(d => <option key={d._id} value={d._id}>{d.departmentName}</option>)}
+                </Field>
+                <ErrorMessage name="departmentID" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label>Quantity *</label>
-                  <Field name="quantity" type="number" className="form-control" min="1" />
-                  <ErrorMessage name="quantity" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-4 mb-3">
-                  <label>Estimated Cost (₹) *</label>
-                  <Field name="cost" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="cost" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-4 mb-3">
-                  <label>Allocation Date *</label>
-                  <Field name="allocationDate" type="date" className="form-control" />
-                  <ErrorMessage name="allocationDate" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h4>Allocation Details</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Allocated By *</label>
-                  <Field as="select" name="allocatedBy" className="form-control">
-                    <option value="">Select User</option>
-                    {users.map(u => <option key={u._id} value={u._id}>{u.fullName}</option>)}
-                  </Field>
-                  <ErrorMessage name="allocatedBy" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Priority Level *</label>
-                  <Field as="select" name="priority" className="form-control">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Critical">Critical</option>
-                  </Field>
-                  <ErrorMessage name="priority" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Resource Type *</label>
+                <Field as="select" name="resourceType" className="form-control">
+                  <option value="">Select Type</option>
+                  <option value="Vehicle">Vehicle</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Budget">Budget</option>
+                  <option value="Personnel">Personnel</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="Other">Other</option>
+                </Field>
+                <ErrorMessage name="resourceType" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-12 mb-3">
-                  <label>Status *</label>
-                  <Field as="select" name="status" className="form-control">
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Allocated">Allocated</option>
-                    <option value="In Use">In Use</option>
-                    <option value="Returned">Returned</option>
-                  </Field>
-                  <ErrorMessage name="status" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Quantity *</label>
+                <Field name="quantity" type="number" className="form-control" min="1" />
+                <ErrorMessage name="quantity" component="div" className="text-danger small" />
               </div>
-            </div>
 
-            <div className="form-section">
-              <h4>Additional Information</h4>
-              <div className="mb-3">
+              <div className="form-group">
+                <label>Estimated Cost (₹) *</label>
+                <Field name="cost" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="cost" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Allocation Date *</label>
+                <Field name="allocationDate" type="date" className="form-control" />
+                <ErrorMessage name="allocationDate" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Allocated By *</label>
+                <Field as="select" name="allocatedBy" className="form-control">
+                  <option value="">Select User</option>
+                  {users.map(u => <option key={u._id} value={u._id}>{u.fullName}</option>)}
+                </Field>
+                <ErrorMessage name="allocatedBy" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Priority Level *</label>
+                <Field as="select" name="priority" className="form-control">
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </Field>
+                <ErrorMessage name="priority" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Status *</label>
+                <Field as="select" name="status" className="form-control">
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Allocated">Allocated</option>
+                  <option value="In Use">In Use</option>
+                  <option value="Returned">Returned</option>
+                </Field>
+                <ErrorMessage name="status" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group full-width">
                 <label>Remarks</label>
                 <Field as="textarea" name="remarks" className="form-control" rows="3" placeholder="Add any additional notes..." />
                 <ErrorMessage name="remarks" component="div" className="text-danger small" />

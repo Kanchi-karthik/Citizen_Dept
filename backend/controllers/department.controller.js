@@ -2,12 +2,35 @@ const Department = require("../models/Department");
 const DeptPerformance = require("../models/DeptPerformance");
 const ResourceAllocation = require("../models/ResourceAllocation");
 const ComplaintStatus = require("../models/ComplaintStatus");
+const Complaint = require("../models/Complaint");
+const bcrypt = require('bcrypt');
 
 // ========== DEPARTMENT CRUD ==========
 exports.getDepartments = async (req, res, next) => {
   try {
     const departments = await Department.find().sort({ createdAt: -1 });
-    res.json(departments);
+    
+    // Get complaint counts for each department
+    const departmentsWithCounts = await Promise.all(departments.map(async (dept) => {
+      const complaintCount = await Complaint.countDocuments({ department: dept._id });
+      return {
+        ...dept.toObject(),
+        complaintCount
+      };
+    }));
+    
+    res.json(departmentsWithCounts);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// New function to get complaint count for a specific department
+exports.getDepartmentComplaintCount = async (req, res, next) => {
+  try {
+    const { departmentId } = req.params;
+    const complaintCount = await Complaint.countDocuments({ department: departmentId });
+    res.json({ complaintCount });
   } catch (err) {
     next(err);
   }
@@ -25,7 +48,17 @@ exports.getDepartmentById = async (req, res, next) => {
 
 exports.createDepartment = async (req, res, next) => {
   try {
-    const department = new Department(req.body);
+    // Hash the password before saving
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    
+    const departmentData = {
+      ...req.body,
+      password: hashedPassword
+    };
+    
+    const department = new Department(departmentData);
     await department.save();
     res.status(201).json(department);
   } catch (err) {
@@ -35,7 +68,23 @@ exports.createDepartment = async (req, res, next) => {
 
 exports.updateDepartment = async (req, res, next) => {
   try {
-    const department = await Department.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    let updateData = { ...req.body };
+    
+    // Handle password update
+    if ('password' in req.body) {
+      // If password field is present in request
+      if (req.body.password && req.body.password.trim() !== '') {
+        // If password is not empty, hash it
+        const bcrypt = require('bcrypt');
+        const saltRounds = 10;
+        updateData.password = await bcrypt.hash(req.body.password, saltRounds);
+      } else {
+        // If password is empty, remove it from update data to keep existing password
+        delete updateData.password;
+      }
+    }
+    
+    const department = await Department.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!department) return res.status(404).json({ message: "Department not found" });
     res.json(department);
   } catch (err) {
@@ -48,6 +97,64 @@ exports.deleteDepartment = async (req, res, next) => {
     const department = await Department.findByIdAndDelete(req.params.id);
     if (!department) return res.status(404).json({ message: "Department not found" });
     res.json({ message: "Department deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Department Login
+exports.loginDepartment = async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    
+    // Find department by username
+    const department = await Department.findOne({ username });
+    if (!department) {
+      return res.status(401).json({ success: false, message: "Invalid username or password" });
+    }
+    
+    // Compare password
+    const isMatch = await bcrypt.compare(password, department.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Invalid username or password" });
+    }
+    
+    // Return department data without password
+    const departmentData = department.toObject();
+    delete departmentData.password;
+    
+    res.json({ success: true, department: departmentData });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete all departments
+exports.deleteAllDepartments = async (req, res, next) => {
+  try {
+    await Department.deleteMany({});
+    res.json({ message: "All departments deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Forgot Password
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    
+    // In a real application, you would:
+    // 1. Find department by email
+    // 2. Generate a password reset token
+    // 3. Save the token to the database
+    // 4. Send an email with the reset link
+    
+    // For this demo, we'll just return a success response
+    res.json({ 
+      success: true, 
+      message: "Password reset instructions have been sent to your email" 
+    });
   } catch (err) {
     next(err);
   }

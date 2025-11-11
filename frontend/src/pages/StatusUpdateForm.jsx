@@ -153,100 +153,86 @@ export default function StatusUpdateForm({ departmentId }){
         }}
       >
         {({ isSubmitting, values }) => (
-          <Form className="form-container">
-            <div className="form-section">
-              <h4>Complaint & Department</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Complaint *</label>
-                  <Field as="select" name="complaintID" className="form-control">
-                    <option value="">Select complaint</option>
-                    {complaints.map(c => (
-                      <option key={c._id} value={c._id}>
-                        {c.title} ({c.complaintType})
-                      </option>
-                    ))}
-                  </Field>
-                  <ErrorMessage name="complaintID" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Department *</label>
-                  <Field as="select" name="departmentID" className="form-control" disabled>
-                    <option value="">Select department</option>
-                    {depts.map(d => (
-                      <option key={d._id} value={d._id}>
-                        {d.departmentName}
-                      </option>
-                    ))}
-                  </Field>
-                  <ErrorMessage name="departmentID" component="div" className="text-danger small" />
-                </div>
+          <Form className="form-container status-update-form">
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Complaint *</label>
+                <Field as="select" name="complaintID" className="form-control">
+                  <option value="">Select complaint</option>
+                  {complaints.map(c => (
+                    <option key={c._id} value={c._id}>
+                      {c.title} ({c.complaintType})
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="complaintID" component="div" className="text-danger small" />
               </div>
-            </div>
 
-            <div className="form-section">
-              <h4>Status Details</h4>
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label>Current Status *</label>
-                  <Field as="select" name="status" className="form-control">
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="On Hold">On Hold</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
-                  </Field>
-                  <ErrorMessage name="status" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Department *</label>
+                <Field as="select" name="departmentID" className="form-control" disabled>
+                  <option value="">Select department</option>
+                  {depts.map(d => (
+                    <option key={d._id} value={d._id}>
+                      {d.departmentName}
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="departmentID" component="div" className="text-danger small" />
+              </div>
 
-                <div className="col-md-4 mb-3">
-                  <label>Priority Level *</label>
-                  <Field as="select" name="priority" className="form-control">
-                    <option value="Low">Low</option>
-                    <option value="Normal">Normal</option>
-                    <option value="High">High</option>
-                    <option value="Critical">Critical</option>
-                  </Field>
-                  <ErrorMessage name="priority" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Current Status *</label>
+                <Field as="select" name="status" className="form-control">
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </Field>
+                <ErrorMessage name="status" component="div" className="text-danger small" />
+              </div>
 
-                <div className="col-md-4 mb-3">
-                  <label>Progress (%) *</label>
+              <div className="form-group">
+                <label>Priority Level *</label>
+                <Field as="select" name="priority" className="form-control">
+                  <option value="Low">Low</option>
+                  <option value="Normal">Normal</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </Field>
+                <ErrorMessage name="priority" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Progress (%) *</label>
+                <div className="progress-input">
                   <Field name="progressPercentage" type="range" min="0" max="100" className="form-control form-range" />
-                  <small className="text-muted">{values.progressPercentage}%</small>
-                  <ErrorMessage name="progressPercentage" component="div" className="text-danger small" />
+                  <span className="progress-value">{values.progressPercentage}%</span>
                 </div>
+                <ErrorMessage name="progressPercentage" component="div" className="text-danger small" />
               </div>
-            </div>
 
-            <div className="form-section">
-              <h4>Assignment & Timeline</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Assigned To *</label>
-                  <Field as="select" name="assignedTo" className="form-control">
-                    <option value="">Select person</option>
-                    {users.map(u => (
-                      <option key={u._id} value={u._id}>
-                        {u.fullName} ({u.role})
-                      </option>
-                    ))}
-                  </Field>
-                  <ErrorMessage name="assignedTo" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Expected Resolution Days *</label>
-                  <Field name="resolutionDays" type="number" className="form-control" min="1" />
-                  <ErrorMessage name="resolutionDays" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Assigned To *</label>
+                <Field as="select" name="assignedTo" className="form-control">
+                  <option value="">Select person</option>
+                  {users.map(u => (
+                    <option key={u._id} value={u._id}>
+                      {u.fullName} ({u.role})
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="assignedTo" component="div" className="text-danger small" />
               </div>
-            </div>
 
-            <div className="form-section">
-              <h4>Additional Information</h4>
-              <div className="mb-3">
+              <div className="form-group">
+                <label>Expected Resolution Days *</label>
+                <Field name="resolutionDays" type="number" className="form-control" min="1" />
+                <ErrorMessage name="resolutionDays" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group full-width">
                 <label>Update Remarks *</label>
                 <Field as="textarea" name="remarks" className="form-control" rows="4" placeholder="Describe the current status and actions taken..." />
                 <ErrorMessage name="remarks" component="div" className="text-danger small" />
@@ -259,7 +245,7 @@ export default function StatusUpdateForm({ departmentId }){
               </button>
               {editId && (
                 <button type="button" onClick={handleCancel} className="btn btn-secondary">
-                  Cancel
+                  <X size={16} /> Cancel
                 </button>
               )}
             </div>

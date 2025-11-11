@@ -159,8 +159,8 @@ export default function PerformanceForm({ departmentId }) {
 
   return (
     <div>
-      <div className="form-header">
-        <h2>Department Performance Management</h2>
+      <div className="form-header" style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '2px solid var(--primary-light)' }}>
+        <h2 style={{ color: 'var(--primary)', margin: 0 }}>Department Performance Management</h2>
         {editId && (
           <button className="btn btn-secondary" onClick={handleCancel}>
             <X size={16} /> Cancel Edit
@@ -194,266 +194,224 @@ export default function PerformanceForm({ departmentId }) {
         }}
       >
         {({ isSubmitting, values }) => (
-          <Form className="form-container">
-            {/* TIME PERIOD SECTION */}
-            <div className="form-section">
-              <h4>Performance Period Details</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Department *</label>
-                  <Field as="select" name="departmentID" className="form-control">
-                    <option value="">Select department</option>
-                    {depts.map((d) => (
-                      <option key={d._id} value={d._id}>
-                        {d.departmentName}
-                      </option>
-                    ))}
+          <Form className="form-container performance-form">
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Department *</label>
+                <Field as="select" name="departmentID" className="form-control">
+                  <option value="">Select department</option>
+                  {depts.map((d) => (
+                    <option key={d._id} value={d._id}>
+                      {d.departmentName}
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="departmentID" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Period Type *</label>
+                <Field as="select" name="periodType" className="form-control">
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Half-yearly">Half-yearly</option>
+                  <option value="Yearly">Yearly</option>
+                </Field>
+                <ErrorMessage name="periodType" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Year *</label>
+                <Field name="year" type="number" className="form-control" min="1900" max={new Date().getFullYear()} />
+                <ErrorMessage name="year" component="div" className="text-danger small" />
+              </div>
+
+              {values.periodType === 'Monthly' && (
+                <div className="form-group">
+                  <label>Month *</label>
+                  <Field as="select" name="month" className="form-control">
+                    <option value="January">January</option>
+                    <option value="February">February</option>
+                    <option value="March">March</option>
+                    <option value="April">April</option>
+                    <option value="May">May</option>
+                    <option value="June">June</option>
+                    <option value="July">July</option>
+                    <option value="August">August</option>
+                    <option value="September">September</option>
+                    <option value="October">October</option>
+                    <option value="November">November</option>
+                    <option value="December">December</option>
                   </Field>
-                  <ErrorMessage name="departmentID" component="div" className="text-danger small" />
+                  <ErrorMessage name="month" component="div" className="text-danger small" />
                 </div>
+              )}
 
-                <div className="col-md-6 mb-3">
-                  <label>Period Type *</label>
-                  <Field as="select" name="periodType" className="form-control">
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Half-yearly">Half-yearly</option>
-                    <option value="Yearly">Yearly</option>
+              {values.periodType === 'Quarterly' && (
+                <div className="form-group">
+                  <label>Quarter *</label>
+                  <Field as="select" name="quarter" className="form-control">
+                    <option value="Q1">Q1 (Jan-Mar)</option>
+                    <option value="Q2">Q2 (Apr-Jun)</option>
+                    <option value="Q3">Q3 (Jul-Sep)</option>
+                    <option value="Q4">Q4 (Oct-Dec)</option>
                   </Field>
-                  <ErrorMessage name="periodType" component="div" className="text-danger small" />
+                  <ErrorMessage name="quarter" component="div" className="text-danger small" />
                 </div>
+              )}
+
+              <div className="form-group">
+                <label>Start Date *</label>
+                <Field name="startDate" type="date" className="form-control" />
+                <ErrorMessage name="startDate" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label>Year *</label>
-                  <Field name="year" type="number" className="form-control" min="1900" max={new Date().getFullYear()} />
-                  <ErrorMessage name="year" component="div" className="text-danger small" />
-                </div>
-
-                {values.periodType === 'Monthly' && (
-                  <div className="col-md-4 mb-3">
-                    <label>Month *</label>
-                    <Field as="select" name="month" className="form-control">
-                      <option value="January">January</option>
-                      <option value="February">February</option>
-                      <option value="March">March</option>
-                      <option value="April">April</option>
-                      <option value="May">May</option>
-                      <option value="June">June</option>
-                      <option value="July">July</option>
-                      <option value="August">August</option>
-                      <option value="September">September</option>
-                      <option value="October">October</option>
-                      <option value="November">November</option>
-                      <option value="December">December</option>
-                    </Field>
-                    <ErrorMessage name="month" component="div" className="text-danger small" />
-                  </div>
-                )}
-
-                {values.periodType === 'Quarterly' && (
-                  <div className="col-md-4 mb-3">
-                    <label>Quarter *</label>
-                    <Field as="select" name="quarter" className="form-control">
-                      <option value="Q1">Q1 (Jan-Mar)</option>
-                      <option value="Q2">Q2 (Apr-Jun)</option>
-                      <option value="Q3">Q3 (Jul-Sep)</option>
-                      <option value="Q4">Q4 (Oct-Dec)</option>
-                    </Field>
-                    <ErrorMessage name="quarter" component="div" className="text-danger small" />
-                  </div>
-                )}
+              <div className="form-group">
+                <label>End Date *</label>
+                <Field name="endDate" type="date" className="form-control" />
+                <ErrorMessage name="endDate" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Start Date *</label>
-                  <Field name="startDate" type="date" className="form-control" />
-                  <ErrorMessage name="startDate" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>End Date *</label>
-                  <Field name="endDate" type="date" className="form-control" />
-                  <ErrorMessage name="endDate" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            {/* COMPLAINT METRICS SECTION */}
-            <div className="form-section">
-              <h4>Complaint Metrics</h4>
-              <div className="row">
-                <div className="col-md-3 mb-3">
-                  <label>Total Complaints Received *</label>
-                  <Field name="totalComplaints" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="totalComplaints" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Resolved Complaints *</label>
-                  <Field name="resolvedComplaints" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="resolvedComplaints" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Pending Complaints *</label>
-                  <Field name="pendingComplaints" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="pendingComplaints" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Rejected Complaints</label>
-                  <Field name="rejectedComplaints" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="rejectedComplaints" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            {/* RESOLUTION TIME METRICS */}
-            <div className="form-section">
-              <h4>Resolution & Response Time Metrics</h4>
-              <div className="row">
-                <div className="col-md-3 mb-3">
-                  <label>Avg Resolution Time (days) *</label>
-                  <Field name="avgResolutionTime" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="avgResolutionTime" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Min Resolution Time (days)</label>
-                  <Field name="minResolutionTime" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="minResolutionTime" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Max Resolution Time (days)</label>
-                  <Field name="maxResolutionTime" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="maxResolutionTime" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-3 mb-3">
-                  <label>Response Time (hours) *</label>
-                  <Field name="responseTime" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="responseTime" component="div" className="text-danger small" />
-                </div>
+              {/* COMPLAINT METRICS SECTION */}
+              <div className="form-group">
+                <label>Total Complaints Received *</label>
+                <Field name="totalComplaints" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="totalComplaints" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Target Resolution Days *</label>
-                  <Field name="targetResolutionDays" type="number" className="form-control" min="1" step="any" />
-                  <ErrorMessage name="targetResolutionDays" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Complaint Resolution Rate (%) </label>
-                  <Field name="complaintResolutionRate" type="number" className="form-control" min="0" max="100" step="any" />
-                  <ErrorMessage name="complaintResolutionRate" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            {/* BUDGET & RESOURCE METRICS */}
-            <div className="form-section">
-              <h4>Budget & Resource Metrics</h4>
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label>Allocated Budget (₹)</label>
-                  <Field name="allocatedBudget" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="allocatedBudget" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-4 mb-3">
-                  <label>Spent Budget (₹)</label>
-                  <Field name="spentBudget" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="spentBudget" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-4 mb-3">
-                  <label>Budget Utilization (%) *</label>
-                  <Field name="budgetUtilization" type="number" className="form-control" min="0" max="100" step="any" />
-                  <ErrorMessage name="budgetUtilization" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Resolved Complaints *</label>
+                <Field name="resolvedComplaints" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="resolvedComplaints" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Staff Strength</label>
-                  <Field name="staffStrength" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="staffStrength" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Rework Count</label>
-                  <Field name="rework" type="number" className="form-control" min="0" step="any" />
-                  <ErrorMessage name="rework" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            {/* QUALITY & SATISFACTION METRICS */}
-            <div className="form-section">
-              <h4>Quality & Satisfaction Metrics</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Citizen Satisfaction Score (0-5) *</label>
-                  <Field name="citizenSatisfactionScore" type="number" className="form-control" min="0" max="5" step="any" />
-                  <ErrorMessage name="citizenSatisfactionScore" component="div" className="text-danger small" />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Performance Rating *</label>
-                  <Field as="select" name="performanceRating" className="form-control">
-                    <option value="Excellent">Excellent</option>
-                    <option value="Very Good">Very Good</option>
-                    <option value="Good">Good</option>
-                    <option value="Satisfactory">Satisfactory</option>
-                    <option value="Needs Improvement">Needs Improvement</option>
-                  </Field>
-                  <ErrorMessage name="performanceRating" component="div" className="text-danger small" />
-                </div>
-              </div>
-            </div>
-
-            {/* INITIATIVES & STATUS */}
-            <div className="form-section">
-              <h4>Initiatives & Status</h4>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Record Status *</label>
-                  <Field as="select" name="status" className="form-control">
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="On Hold">On Hold</option>
-                    <option value="Archived">Archived</option>
-                  </Field>
-                  <ErrorMessage name="status" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Pending Complaints *</label>
+                <Field name="pendingComplaints" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="pendingComplaints" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-check">
-                    <Field type="checkbox" name="trainingConducted" className="form-check-input" />
-                    <span className="form-check-label">Training Conducted</span>
-                  </label>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-check">
-                    <Field type="checkbox" name="systemsUpgrade" className="form-check-input" />
-                    <span className="form-check-label">Systems Upgrade Done</span>
-                  </label>
-                </div>
+              <div className="form-group">
+                <label>Rejected Complaints</label>
+                <Field name="rejectedComplaints" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="rejectedComplaints" component="div" className="text-danger small" />
               </div>
-            </div>
 
-            {/* REMARKS SECTION */}
-            <div className="form-section">
-              <h4>Additional Notes</h4>
-              <div className="mb-3">
+              {/* RESOLUTION TIME METRICS */}
+              <div className="form-group">
+                <label>Avg Resolution Time (days) *</label>
+                <Field name="avgResolutionTime" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="avgResolutionTime" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Min Resolution Time (days)</label>
+                <Field name="minResolutionTime" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="minResolutionTime" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Max Resolution Time (days)</label>
+                <Field name="maxResolutionTime" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="maxResolutionTime" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Response Time (hours) *</label>
+                <Field name="responseTime" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="responseTime" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Target Resolution Days *</label>
+                <Field name="targetResolutionDays" type="number" className="form-control" min="1" step="any" />
+                <ErrorMessage name="targetResolutionDays" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Complaint Resolution Rate (%) </label>
+                <Field name="complaintResolutionRate" type="number" className="form-control" min="0" max="100" step="any" />
+                <ErrorMessage name="complaintResolutionRate" component="div" className="text-danger small" />
+              </div>
+
+              {/* BUDGET & RESOURCE METRICS */}
+              <div className="form-group">
+                <label>Allocated Budget (₹)</label>
+                <Field name="allocatedBudget" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="allocatedBudget" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Spent Budget (₹)</label>
+                <Field name="spentBudget" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="spentBudget" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Budget Utilization (%) *</label>
+                <Field name="budgetUtilization" type="number" className="form-control" min="0" max="100" step="any" />
+                <ErrorMessage name="budgetUtilization" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Staff Strength</label>
+                <Field name="staffStrength" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="staffStrength" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Rework Count</label>
+                <Field name="rework" type="number" className="form-control" min="0" step="any" />
+                <ErrorMessage name="rework" component="div" className="text-danger small" />
+              </div>
+
+              {/* QUALITY & SATISFACTION METRICS */}
+              <div className="form-group">
+                <label>Citizen Satisfaction Score (0-5) *</label>
+                <Field name="citizenSatisfactionScore" type="number" className="form-control" min="0" max="5" step="any" />
+                <ErrorMessage name="citizenSatisfactionScore" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group">
+                <label>Performance Rating *</label>
+                <Field as="select" name="performanceRating" className="form-control">
+                  <option value="Excellent">Excellent</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                  <option value="Satisfactory">Satisfactory</option>
+                  <option value="Needs Improvement">Needs Improvement</option>
+                </Field>
+                <ErrorMessage name="performanceRating" component="div" className="text-danger small" />
+              </div>
+
+              {/* INITIATIVES & STATUS */}
+              <div className="form-group">
+                <label>Record Status *</label>
+                <Field as="select" name="status" className="form-control">
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Archived">Archived</option>
+                </Field>
+                <ErrorMessage name="status" component="div" className="text-danger small" />
+              </div>
+
+              <div className="form-group checkbox-group">
+                <label className="form-check">
+                  <Field type="checkbox" name="trainingConducted" className="form-check-input" />
+                  <span className="form-check-label">Training Conducted</span>
+                </label>
+              </div>
+
+              <div className="form-group checkbox-group">
+                <label className="form-check">
+                  <Field type="checkbox" name="systemsUpgrade" className="form-check-input" />
+                  <span className="form-check-label">Systems Upgrade Done</span>
+                </label>
+              </div>
+
+              {/* REMARKS SECTION */}
+              <div className="form-group full-width">
                 <label>Remarks</label>
                 <Field as="textarea" name="remarks" className="form-control" rows="4" placeholder="Add any additional notes, observations, or action items..." />
               </div>

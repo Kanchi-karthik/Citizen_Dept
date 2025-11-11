@@ -132,8 +132,8 @@ const ComplaintForm = () => {
   };
 
   return (
-    <div>
-      <h2>File Complaint</h2>
+    <div className="form-container">
+      <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>File Complaint</h2>
       <Formik
         key={nextComplaintId}
         initialValues={{
@@ -171,6 +171,9 @@ const ComplaintForm = () => {
             // Update next complaint ID
             const number = parseInt(nextComplaintId.replace('COMP', '')) + 1;
             setNextComplaintId(`COMP${String(number).padStart(3, '0')}`);
+            
+            // Dispatch a custom event to notify other components that a complaint was filed
+            window.dispatchEvent(new CustomEvent('complaintFiled'));
           } catch (err) {
             console.error('Error filing complaint:', err);
             alert('Error filing complaint: ' + (err.response?.data?.message || err.message));
@@ -178,90 +181,87 @@ const ComplaintForm = () => {
         }}
       >
         {({ values, setFieldValue }) => (
-          <Form className="complaint-form">
-            <div className="form-section">
-              <h4>Complaint Details</h4>
-              {/* Auto-generated Complaint ID - Hidden */}
-              <Field name="complaintId" type="hidden" />
+          <Form className="form-container complaint-form">
+            {/* Auto-generated Complaint ID - Hidden */}
+            <Field name="complaintId" type="hidden" />
+            
+            <div className="form-grid">
+              <div className="form-group">
+                <label>User *</label>
+                <Field as="select" name="user" className="form-control">
+                  <option value="">Select User</option>
+                  {users.map(u => (
+                    <option key={u._id} value={u._id}>{u.fullName} ({u.email})</option>
+                  ))}
+                </Field>
+                <ErrorMessage name="user" component="div" className="text-danger small" />
+              </div>
               
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <Field as="select" name="user" className="form-control">
-                    <option value="">Select User</option>
-                    {users.map(u => (
-                      <option key={u._id} value={u._id}>{u.fullName} ({u.email})</option>
-                    ))}
-                  </Field>
-                  <ErrorMessage name="user" component="div" className="text-danger small" />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <Field as="select" name="department" className="form-control">
-                    <option value="">Select Department</option>
-                    {departments.map(d => (
-                      <option key={d._id} value={d._id}>{d.departmentName}</option>
-                    ))}
-                  </Field>
-                  <ErrorMessage name="department" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Department *</label>
+                <Field as="select" name="department" className="form-control">
+                  <option value="">Select Department</option>
+                  {departments.map(d => (
+                    <option key={d._id} value={d._id}>{d.departmentName}</option>
+                  ))}
+                </Field>
+                <ErrorMessage name="department" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Title *</label>
-                  <Field name="title" className="form-control" placeholder="Complaint title" />
-                  <ErrorMessage name="title" component="div" className="text-danger small" />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label>Complaint Type *</label>
-                  <Field as="select" name="complaintType" className="form-control">
-                    <option value="">Select Type</option>
-                    <option value="Infrastructure">Infrastructure</option>
-                    <option value="Cleanliness">Cleanliness</option>
-                    <option value="Service">Service</option>
-                    <option value="Traffic">Traffic</option>
-                    <option value="Safety">Safety</option>
-                    <option value="Other">Other</option>
-                  </Field>
-                  <ErrorMessage name="complaintType" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Title *</label>
+                <Field name="title" className="form-control" placeholder="Complaint title" />
+                <ErrorMessage name="title" component="div" className="text-danger small" />
+              </div>
+              
+              <div className="form-group">
+                <label>Complaint Type *</label>
+                <Field as="select" name="complaintType" className="form-control">
+                  <option value="">Select Type</option>
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="Cleanliness">Cleanliness</option>
+                  <option value="Service">Service</option>
+                  <option value="Traffic">Traffic</option>
+                  <option value="Safety">Safety</option>
+                  <option value="Other">Other</option>
+                </Field>
+                <ErrorMessage name="complaintType" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Area Type *</label>
-                  <Field as="select" name="areaType" className="form-control">
-                    <option value="">Select Area</option>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Public">Public</option>
-                  </Field>
-                  <ErrorMessage name="areaType" component="div" className="text-danger small" />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label>Location *</label>
-                  <Field name="location" className="form-control" placeholder="Enter location" />
-                  <ErrorMessage name="location" component="div" className="text-danger small" />
-                </div>
+              <div className="form-group">
+                <label>Area Type *</label>
+                <Field as="select" name="areaType" className="form-control">
+                  <option value="">Select Area</option>
+                  <option value="Residential">Residential</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Industrial">Industrial</option>
+                  <option value="Public">Public</option>
+                </Field>
+                <ErrorMessage name="areaType" component="div" className="text-danger small" />
+              </div>
+              
+              <div className="form-group">
+                <label>Location *</label>
+                <Field name="location" className="form-control" placeholder="Enter location" />
+                <ErrorMessage name="location" component="div" className="text-danger small" />
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Days Pending *</label>
-                  <Field name="days" type="number" className="form-control" min="1" />
-                  <ErrorMessage name="days" component="div" className="text-danger small" />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label>Status</label>
-                  <Field as="select" name="status" className="form-control">
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Resolved">Resolved</option>
-                  </Field>
-                </div>
+              <div className="form-group">
+                <label>Days Pending *</label>
+                <Field name="days" type="number" className="form-control" min="1" />
+                <ErrorMessage name="days" component="div" className="text-danger small" />
+              </div>
+              
+              <div className="form-group">
+                <label>Status</label>
+                <Field as="select" name="status" className="form-control">
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </Field>
               </div>
 
-              <div className="mb-3">
+              <div className="form-group full-width">
                 <label>Description *</label>
                 <Field 
                   as="textarea" 

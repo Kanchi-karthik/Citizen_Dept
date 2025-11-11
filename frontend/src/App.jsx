@@ -12,6 +12,9 @@ import DepartmentDashboard from "./pages/DepartmentDashboard.jsx";
 import PerformanceForm from "./pages/PerformanceForm.jsx";
 import ResourceAllocationForm from "./pages/ResourceAllocationForm.jsx";
 import StatusUpdateForm from "./pages/StatusUpdateForm.jsx";
+import DepartmentLogin from "./components/DepartmentLogin.jsx";
+import CommonDepartmentLogin from "./components/CommonDepartmentLogin.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/app.css";
 
@@ -26,10 +29,9 @@ const AppContent = () => {
 
   return (
     <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
-      {showMainSidebar && <Sidebar />}
-      <div className={`main-content ${showMainSidebar ? (sidebarOpen ? "open" : "closed") : ""}`} 
-           style={showMainSidebar ? {} : { marginLeft: 0, width: '100%' }}>
-        {showMainSidebar && (
+      {showMainSidebar && (
+        <>
+          <Sidebar className={sidebarOpen ? "open" : "closed"} />
           <div className="mobile-header">
             <button 
               className="mobile-menu-btn" 
@@ -39,7 +41,10 @@ const AppContent = () => {
               <Menu size={24} />
             </button>
           </div>
-        )}
+        </>
+      )}
+      <div className={`main-content ${showMainSidebar ? (sidebarOpen ? "open" : "closed") : ""}`} 
+           style={showMainSidebar ? {} : { marginLeft: 0, width: '100%' }}>
         <Routes>
           <Route path="/users" element={<UserList />} />
           <Route path="/complaints" element={<ComplaintList />} />
@@ -48,10 +53,14 @@ const AppContent = () => {
           <Route path="/departments" element={<DepartmentList />} />
           <Route path="/department-form" element={<DepartmentForm />} />
           <Route path="/department/:id" element={<DepartmentDashboard />} />
+          <Route path="/department-login/:id" element={<DepartmentLogin />} />
+          <Route path="/department-login" element={<CommonDepartmentLogin />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/performance-form" element={<PerformanceForm />} />
           <Route path="/resource-allocation" element={<ResourceAllocationForm />} />
           <Route path="/status-update" element={<StatusUpdateForm />} />
-          <Route path="*" element={<h2>Welcome to Citizen Department Dashboard</h2>} />
+          <Route path="/" element={<CommonDepartmentLogin />} />
+          <Route path="*" element={<CommonDepartmentLogin />} />
         </Routes>
       </div>
     </SidebarContext.Provider>

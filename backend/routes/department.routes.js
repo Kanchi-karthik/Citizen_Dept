@@ -24,7 +24,11 @@ router.delete("/status/:id", ctrl.deleteStatus);
 // ========== DEPARTMENT ROUTES (GENERIC :id ROUTES AT END) ==========
 router.get("/", ctrl.getDepartments);
 router.post("/", ctrl.createDepartment);
+router.post("/login", ctrl.loginDepartment);
+router.post("/forgot-password", ctrl.forgotPassword);
+router.delete("/all", ctrl.deleteAllDepartments);
 router.get("/:id", ctrl.getDepartmentById);
+router.get("/:id/complaint-count", ctrl.getDepartmentComplaintCount); // New route
 router.put("/:id", ctrl.updateDepartment);
 router.delete("/:id", ctrl.deleteDepartment);
 
