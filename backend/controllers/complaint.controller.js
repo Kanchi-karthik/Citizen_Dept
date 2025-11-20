@@ -60,7 +60,7 @@ exports.updateComplaintStatus = async (req, res, next) => {
     const { status } = req.body;
     
     // Validate status
-    const validStatuses = ['Pending', 'In Progress', 'Resolved'];
+    const validStatuses = ['New', 'Accepted', 'Working', 'On Hold', 'Resolved', 'Closed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }

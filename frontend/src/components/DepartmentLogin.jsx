@@ -67,16 +67,10 @@ const DepartmentLogin = () => {
         password: values.password
       });
       
-      // Verify that the logged in department matches the requested department
-      if (response.data.department._id !== id) {
-        setError('You are not authorized to access this department');
-        return;
-      }
-      
-      // Store department info in localStorage
-      localStorage.setItem('department', JSON.stringify(response.data.department));
-      
       if (response.data.success) {
+        // Store department info in localStorage
+        localStorage.setItem('department', JSON.stringify(response.data.department));
+        
         // Navigate to department dashboard
         navigate(`/department/${response.data.department._id}`);
       } else {

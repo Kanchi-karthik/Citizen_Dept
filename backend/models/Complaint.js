@@ -19,7 +19,7 @@ const ComplaintSchema = new mongoose.Schema({
   days: Number,
   image: String,
   location: String,
-  status: { type: String, enum: ["Pending", "In Progress", "Resolved"], default: "Pending" },
+  status: { type: String, enum: ["New", "Accepted", "Working", "On Hold", "Resolved", "Closed"], default: "New" },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
   // Array of resolution updates instead of single resolution fields

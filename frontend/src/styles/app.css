@@ -238,6 +238,14 @@ body {
   flex: 1;
 }
 
+/* Department Sidebar Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
 /* ---------- Main content ---------- */
 .main-content {
   margin-left: 380px;
@@ -1589,7 +1597,7 @@ h2 {
   padding: 2rem 1.5rem;
   position: fixed;
   top: 0;
-  bottom: 0;
+  height: 100vh;
   left: 0;
   display: flex;
   flex-direction: column;
@@ -1606,6 +1614,7 @@ h2 {
   align-items: flex-start;
   margin-bottom: 2rem;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .department-sidebar .sidebar-header-actions {
@@ -1655,6 +1664,8 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .sidebar-nav-item {
@@ -2547,4 +2558,48 @@ h2 {
   .form-section .form-group.full-width {
     grid-column: 1;
   }
+}
+
+/* Status Badge Styles */
+.status {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.status.new {
+  background-color: #e0e0e0;
+  color: #616161;
+}
+
+.status.accepted {
+  background-color: #bbdefb;
+  color: #0d47a1;
+}
+
+.status.working {
+  background-color: #b3e5fc;
+  color: #01579b;
+}
+
+.status.on-hold {
+  background-color: #ffe082;
+  color: #f57f17;
+}
+
+.status.resolved {
+  background-color: #c8e6c9;
+  color: #1b5e20;
+}
+
+.status.closed {
+  background-color: #e1bee7;
+  color: #4a148c;
 }

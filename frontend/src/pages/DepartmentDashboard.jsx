@@ -41,6 +41,7 @@ const DepartmentDashboard = () => {
     remarks: ''
   });
   const [showResolutionForm, setShowResolutionForm] = useState(false);
+  const [showStatusUpdateForm, setShowStatusUpdateForm] = useState(false);
   const [editingComplaintId, setEditingComplaintId] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [users, setUsers] = useState([]);
@@ -101,8 +102,8 @@ const DepartmentDashboard = () => {
         // Calculate stats for all statuses
         const total = complaintRes.data.length;
         const resolved = complaintRes.data.filter(c => c.status === 'Resolved').length;
-        const pending = complaintRes.data.filter(c => c.status === 'Pending').length;
-        const inProgress = complaintRes.data.filter(c => c.status === 'In Progress').length;
+        const pending = complaintRes.data.filter(c => c.status === 'New').length;
+        const inProgress = complaintRes.data.filter(c => c.status === 'Working').length;
 
         setStats({
           totalComplaints: total,
@@ -166,41 +167,44 @@ const DepartmentDashboard = () => {
 
   const getNextStatus = (currentStatus) => {
     switch (currentStatus) {
-      case 'Pending': return 'In Progress';
-      case 'In Progress': return 'Resolved';
-      default: return 'Pending';
+      case 'New': return 'Accepted';
+      case 'Accepted': return 'Working';
+      case 'Working': return 'Resolved';
+      case 'On Hold': return 'Working';
+      case 'Resolved': return 'Closed';
+      case 'Closed': return 'Accepted'; // Reopen case
+      default: return 'New';
     }
   };
 
   const getComplaintProgress = (status) => {
     switch (status) {
-      case 'Pending': return 25;
-      case 'In Progress': return 75;
-      case 'Resolved': return 100;
+      case 'New': return 10;
+      case 'Accepted': return 25;
+      case 'Working': return 50;
+      case 'On Hold': return 30;
+      case 'Resolved': return 90;
+      case 'Closed': return 100;
       default: return 0;
     }
   };
 
   const getProgressColor = (status) => {
     switch (status) {
-      case 'Pending': return '#ffa726';
-      case 'In Progress': return '#2196f3';
+      case 'New': return '#9e9e9e';
+      case 'Accepted': return '#4caf50';
+      case 'Working': return '#2196f3';
+      case 'On Hold': return '#ff9800';
       case 'Resolved': return '#00897b';
+      case 'Closed': return '#9c27b0';
       default: return '#9e9e9e';
     }
   };
 
   const openStatusUpdateForm = (complaint) => {
-    // Set the complaint in the resolution form and show it
+    // Set the complaint and show the status update form
     setEditingComplaintId(complaint._id);
-    setResolutionForm({
-      resolutionDays: '',
-      resolutionDescription: '',
-      resolutionImages: [],
-      departmentNotes: '',
-      imagePreviews: []
-    });
-    setShowResolutionForm(true);
+    setShowStatusUpdateForm(true);
   };
 
   const openResolutionForm = (complaintId, currentData = {}) => {
@@ -366,7 +370,7 @@ const DepartmentDashboard = () => {
         resolutionImages: [],
         departmentNotes: '',
         imagePreviews: [],
-        status: 'Pending',
+        status: 'New',
         priority: 'Normal',
         progressPercentage: 0,
         assignedTo: '',
@@ -391,17 +395,29 @@ const DepartmentDashboard = () => {
     { name: 'Resolved', value: stats.resolvedComplaints, fill: '#00897b' },
     { name: 'Pending', value: stats.pendingComplaints, fill: '#ffa726' },
     { name: 'In Progress', value: stats.inProgressComplaints, fill: '#2196f3' },
-  ]; // Show all statuses, even with zero values
+  ].filter(item => item.value > 0); // Only show statuses with actual data
 
-  // Chart data for complaints over time
-  const complaintTrendData = [
-    { month: 'Jan', complaints: 4 },
-    { month: 'Feb', complaints: 3 },
-    { month: 'Mar', complaints: 6 },
-    { month: 'Apr', complaints: 5 },
-    { month: 'May', complaints: 8 },
-    { month: 'Jun', complaints: 7 },
-  ];
+  // Chart data for complaints over time (using actual department data)
+  // Group complaints by month for trend analysis
+  const complaintTrendData = complaints.reduce((acc, complaint) => {
+    const date = new Date(complaint.createdAt);
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    const key = `${month} ${year}`;
+    
+    if (!acc[key]) {
+      acc[key] = { month: key, complaints: 0 };
+    }
+    acc[key].complaints += 1;
+    
+    return acc;
+  }, {});
+  
+  const complaintTrendArray = Object.values(complaintTrendData).sort((a, b) => {
+    const aDate = new Date(a.month);
+    const bDate = new Date(b.month);
+    return aDate - bDate;
+  }).slice(-6); // Last 6 months
 
   // Map complaints by location
   const complaintsByLocation = {};
@@ -410,10 +426,14 @@ const DepartmentDashboard = () => {
     complaintsByLocation[location] = (complaintsByLocation[location] || 0) + 1;
   });
 
-  const locationData = Object.entries(complaintsByLocation).map(([location, count]) => ({
-    location,
-    complaints: count
-  }));
+  // Convert to array, sort by count (descending), and limit to top 10
+  const locationData = Object.entries(complaintsByLocation)
+    .map(([location, count]) => ({
+      location,
+      complaints: count
+    }))
+    .sort((a, b) => b.complaints - a.complaints)
+    .slice(0, 10);
 
   return (
     <div className="dashboard-with-sidebar">
@@ -531,7 +551,7 @@ const DepartmentDashboard = () => {
               <div className="chart-card">
                 <h3>Complaints Trend (6 Months)</h3>
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={complaintTrendData}>
+                  <LineChart data={complaintTrendArray}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
@@ -539,7 +559,7 @@ const DepartmentDashboard = () => {
                     <Line type="monotone" dataKey="complaints" stroke="#005b5f" strokeWidth={2} dot={{ fill: '#005b5f', r: 5 }} />
                   </LineChart>
                 </ResponsiveContainer>
-                {complaintTrendData.length === 0 && (
+                {complaintTrendArray.length === 0 && (
                   <div className="empty-state">
                     <p>No trend data available for visualization</p>
                   </div>
@@ -701,11 +721,7 @@ const DepartmentDashboard = () => {
                         <td>{complaint.user?.fullName || 'N/A'}</td>
                         <td>{complaint.location || 'N/A'}</td>
                         <td>
-                          <span className={`badge ${
-                            complaint.status === 'Resolved' ? 'bg-success' : 
-                            complaint.status === 'Pending' ? 'bg-warning' : 
-                            complaint.status === 'In Progress' ? 'bg-info' : 'bg-secondary'
-                          }`}>
+                          <span className={`status-badge ${complaint.status?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}>
                             {complaint.status}
                           </span>
                         </td>
@@ -744,16 +760,37 @@ const DepartmentDashboard = () => {
                 </table>
               </div>
             )}
+            
+            {/* Status Update Form Modal */}
+            {showStatusUpdateForm && editingComplaintId && (
+              <div className="user-detail-modal-overlay" onClick={() => setShowStatusUpdateForm(false)}>
+                <div className="user-detail-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+                  <button className="user-detail-modal-close" onClick={() => setShowStatusUpdateForm(false)}>&times;</button>
+                  <h3>Update Complaint Status</h3>
+                  <StatusUpdateForm 
+                    departmentId={id} 
+                    complaintId={editingComplaintId}
+                    onCancel={() => setShowStatusUpdateForm(false)}
+                    onSuccess={() => {
+                      setShowStatusUpdateForm(false);
+                      // Refresh complaints data
+                      const fetchDashboardData = async () => {
+                        try {
+                          const complaintRes = await API.get(`/complaints?departmentId=${id}`);
+                          setComplaints(complaintRes.data);
+                        } catch (err) {
+                          console.error("Error refreshing complaints data:", err);
+                        }
+                      };
+                      fetchDashboardData();
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Status Tab */}
-        {activeTab === 'status' && (
-          <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Status Management</h2>
-            <StatusUpdateForm departmentId={id} />
-          </div>
-        )}
 
         {/* Performance Tab */}
         {activeTab === 'performance' && (
@@ -856,11 +893,7 @@ const DepartmentDashboard = () => {
                     </div>
                     <div className="col-md-6">
                       <p><strong>Status:</strong> 
-                        <span className={`badge ml-2 ${
-                          selectedComplaint.status === 'Resolved' ? 'bg-success' : 
-                          selectedComplaint.status === 'Pending' ? 'bg-warning' : 
-                          selectedComplaint.status === 'In Progress' ? 'bg-info' : 'bg-secondary'
-                        }`}>
+                        <span className={`badge ml-2 ${selectedComplaint.status === 'Resolved' ? 'bg-success' : selectedComplaint.status === 'New' ? 'bg-secondary' : selectedComplaint.status === 'Accepted' ? 'bg-primary' : selectedComplaint.status === 'Working' ? 'bg-info' : selectedComplaint.status === 'On Hold' ? 'bg-warning' : selectedComplaint.status === 'Closed' ? 'bg-dark' : 'bg-secondary'}`}>
                           {selectedComplaint.status}
                         </span>
                       </p>
@@ -1037,8 +1070,9 @@ const DepartmentDashboard = () => {
                             value={resolutionForm.status}
                             onChange={(e) => setResolutionForm({...resolutionForm, status: e.target.value})}
                           >
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
+                            <option value="New">New</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Working">Working</option>
                             <option value="On Hold">On Hold</option>
                             <option value="Resolved">Resolved</option>
                             <option value="Closed">Closed</option>

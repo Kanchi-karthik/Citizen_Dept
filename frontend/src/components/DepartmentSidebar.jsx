@@ -1,5 +1,5 @@
 import React from "react";
-import { BarChart3, Package, CheckCircle2, X, Eye, AlertCircle, LogOut } from "lucide-react";
+import { BarChart3, Package, X, Eye, AlertCircle, LogOut } from "lucide-react";
 import "../styles/app.css";
 
 const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
@@ -44,14 +44,6 @@ const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
         >
           <AlertCircle size={20} />
           <span className="label">Complaints</span>
-        </button>
-
-        <button 
-          className={`sidebar-nav-item ${activeTab === 'status' ? 'active' : ''}`}
-          onClick={() => setActiveTab('status')}
-        >
-          <CheckCircle2 size={20} />
-          <span className="label">Status Management</span>
         </button>
 
         <button 

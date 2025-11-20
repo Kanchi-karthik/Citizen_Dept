@@ -81,7 +81,7 @@ const ComplaintList = () => {
                 <p className="complaint-description">{c.description?.substring(0, 120)}...</p>
                 <div className="complaint-meta">
                   <span className="badge">{c.complaintType}</span>
-                  <span className={`status ${c.status.toLowerCase()}`}>{c.status}</span>
+                  <span className={`status-badge ${c.status?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}>{c.status}</span>
                 </div>
                 <div className="complaint-footer">
                   <small><MapPin size={14} style={{ marginRight: '0.25rem' }} /> {c.location || 'Not specified'}</small>
