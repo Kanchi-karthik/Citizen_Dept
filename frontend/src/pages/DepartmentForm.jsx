@@ -11,7 +11,7 @@ const DepartmentSchema = Yup.object().shape({
   departmentCode: Yup.string().required('Department code is required').min(3, 'Minimum 3 characters'),
   headName: Yup.string().required('Head name is required').min(2, 'Minimum 2 characters'),
   contactEmail: Yup.string().email('Invalid email').required('Email is required'),
-  contactNumber: Yup.string().required('Contact number is required').matches(/^\d{10}$/, 'Must be 10 digits'),
+  contactNumber: Yup.string().required('Contact number is required').min(10, 'Minimum 10 characters').max(15, 'Maximum 15 characters'),
   city: Yup.string().required('City is required').min(2, 'Minimum 2 characters'),
   state: Yup.string().required('State is required').min(2, 'Minimum 2 characters'),
   address: Yup.string().required('Address is required').min(10, 'Minimum 10 characters'),
@@ -29,7 +29,7 @@ const DepartmentSchema = Yup.object().shape({
     then: schema => schema.required('Confirm password is required when agreement is checked').oneOf([Yup.ref('password')], 'Passwords must match'),
     otherwise: schema => schema.notRequired()
   }),
-  agreement: Yup.boolean().required('Agreement is required')
+  agreement: Yup.boolean()
 });
 
 export default function DepartmentForm(){
@@ -103,7 +103,18 @@ export default function DepartmentForm(){
       const codePrefix = departmentCodeMap[deptName] || 'DEPT';
       // Filter departments with the same name
       const existingDepts = allDepartments.filter(dept => dept.departmentName === deptName);
-      const nextNumber = existingDepts.length + 1;
+      
+      // Find the highest existing number for this department type
+      let maxNumber = 0;
+      existingDepts.forEach(dept => {
+        const match = dept.departmentCode.match(/^([A-Z]+)(\d+)$/);
+        if (match && match[1] === codePrefix) {
+          const num = parseInt(match[2]);
+          if (num > maxNumber) maxNumber = num;
+        }
+      });
+      
+      const nextNumber = maxNumber + 1;
       return `${codePrefix}${nextNumber.toString().padStart(3, '0')}`;
     } catch (err) {
       console.error('Error generating department code:', err);
@@ -177,7 +188,8 @@ export default function DepartmentForm(){
       navigate('/departments');
     } catch (err) {
       console.error('Error saving department:', err);
-      toast.error('Failed to save department: ' + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save department';
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }

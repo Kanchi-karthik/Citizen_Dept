@@ -50,15 +50,64 @@ exports.getDepartments = async (req, res, next) => {
 // Create new department
 exports.createDepartment = async (req, res, next) => {
   try {
-    const departmentData = { ...req.body };
+    console.log('Received request to create department:', req.body);
     
-    // Hash password
-    if (departmentData.password) {
-      departmentData.password = await bcrypt.hash(departmentData.password, 10);
+    // Extract only the fields that are part of the Department schema
+    const { 
+      departmentName, 
+      departmentCode, 
+      headName, 
+      contactEmail, 
+      contactNumber, 
+      city, 
+      state, 
+      address, 
+      description, 
+      website, 
+      establishedYear, 
+      employeeCount, 
+      isActive,
+      password
+    } = req.body;
+    
+    // Create department data object with only schema fields
+    const departmentData = {
+      departmentName,
+      departmentCode,
+      headName,
+      contactEmail,
+      contactNumber,
+      city,
+      state,
+      address,
+      description,
+      website,
+      establishedYear,
+      employeeCount,
+      isActive
+    };
+    
+    console.log('Department data to save:', departmentData);
+    
+    // If no password provided, generate a default one
+    if (!password) {
+      // Generate a random default password
+      const defaultPassword = Math.random().toString(36).slice(-8);
+      console.log('Generating default password:', defaultPassword);
+      departmentData.password = await bcrypt.hash(defaultPassword, 10);
+    } else {
+      // Hash provided password
+      console.log('Hashing provided password');
+      departmentData.password = await bcrypt.hash(password, 10);
     }
     
+    console.log('Password hashed successfully');
+    
     const department = new Department(departmentData);
+    console.log('Department object created');
+    
     await department.save();
+    console.log('Department saved successfully');
     
     // Return department data without password
     const departmentObj = department.toObject();
@@ -66,6 +115,52 @@ exports.createDepartment = async (req, res, next) => {
     
     res.status(201).json(departmentObj);
   } catch (err) {
+    console.error('Error creating department:', err);
+    console.error('Request body:', req.body);
+    
+    // Handle duplicate key errors
+    if (err.code === 11000) {
+      console.error('Duplicate key error:', err);
+      const duplicateField = Object.keys(err.keyPattern)[0];
+      let fieldName = '';
+      
+      switch (duplicateField) {
+        case 'departmentCode':
+          fieldName = 'Department code';
+          break;
+        case 'contactEmail':
+          fieldName = 'Email';
+          break;
+        case 'contactNumber':
+          fieldName = 'Contact number';
+          break;
+        default:
+          fieldName = duplicateField;
+      }
+      
+      return res.status(400).json({ 
+        message: `A department with this ${fieldName} already exists.` 
+      });
+    }
+    
+    // Handle other validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      console.error('Validation errors:', errors);
+      return res.status(400).json({ 
+        message: 'Validation Error', 
+        errors 
+      });
+    }
+    
+    // Handle other Mongoose errors
+    if (err.name === 'MongoError') {
+      console.error('MongoDB error:', err);
+      return res.status(500).json({ 
+        message: 'Database error occurred while creating department.' 
+      });
+    }
+    
     next(err);
   }
 };
@@ -91,11 +186,44 @@ exports.getDepartmentById = async (req, res, next) => {
 // Update department
 exports.updateDepartment = async (req, res, next) => {
   try {
-    const updateData = { ...req.body };
+    // Extract only the fields that are part of the Department schema
+    const { 
+      departmentName, 
+      departmentCode, 
+      headName, 
+      contactEmail, 
+      contactNumber, 
+      city, 
+      state, 
+      address, 
+      description, 
+      website, 
+      establishedYear, 
+      employeeCount, 
+      isActive,
+      password
+    } = req.body;
     
-    // Hash password if provided
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    // Create update data object with only schema fields
+    const updateData = {
+      departmentName,
+      departmentCode,
+      headName,
+      contactEmail,
+      contactNumber,
+      city,
+      state,
+      address,
+      description,
+      website,
+      establishedYear,
+      employeeCount,
+      isActive
+    };
+    
+    // Only hash password if provided in the update
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
     }
     
     const department = await Department.findByIdAndUpdate(
@@ -114,6 +242,44 @@ exports.updateDepartment = async (req, res, next) => {
     
     res.json(departmentObj);
   } catch (err) {
+    console.error('Error updating department:', err);
+    console.error('Request body:', req.body);
+    
+    // Handle duplicate key errors
+    if (err.code === 11000) {
+      console.error('Duplicate key error:', err);
+      const duplicateField = Object.keys(err.keyPattern)[0];
+      let fieldName = '';
+      
+      switch (duplicateField) {
+        case 'departmentCode':
+          fieldName = 'Department code';
+          break;
+        case 'contactEmail':
+          fieldName = 'Email';
+          break;
+        case 'contactNumber':
+          fieldName = 'Contact number';
+          break;
+        default:
+          fieldName = duplicateField;
+      }
+      
+      return res.status(400).json({ 
+        message: `A department with this ${fieldName} already exists.` 
+      });
+    }
+    
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      console.error('Validation errors:', errors);
+      return res.status(400).json({ 
+        message: 'Validation Error', 
+        errors 
+      });
+    }
+    
     next(err);
   }
 };

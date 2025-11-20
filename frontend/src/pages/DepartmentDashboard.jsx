@@ -908,24 +908,21 @@ const DepartmentDashboard = () => {
 
         {/* Performance Tab */}
         {activeTab === 'performance' && (
-          <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Department Performance</h2>
+          <div className="department-component-container">
             <PerformanceForm departmentId={id} />
           </div>
         )}
 
         {/* Resources Tab */}
         {activeTab === 'resources' && (
-          <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Resource Allocation</h2>
+          <div className="department-component-container">
             <ResourceAllocationForm departmentId={id} />
           </div>
         )}
 
         {/* Settings Tab */}
         {activeTab === 'settings' && (
-          <div className="form-container">
-            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Department Settings</h2>
+          <div className="department-component-container">
             <div className="settings-container">
               <div className="settings-section">
                 <h3>Profile Information</h3>
@@ -1122,26 +1119,6 @@ const DepartmentDashboard = () => {
                     </div>
                   </form>
                 )}
-              </div>
-              
-              <div className="settings-section">
-                <h3>Department Information</h3>
-                <p>Manage your department's profile and settings.</p>
-                <button className="btn btn-danger" onClick={async () => {
-                  if (window.confirm('Are you sure you want to delete this department? This action cannot be undone.')) {
-                    try {
-                      await API.delete(`/departments/${id}`);
-                      alert('Department deleted successfully!');
-                      // Navigate back to home or departments list
-                      navigate('/');
-                    } catch (err) {
-                      console.error('Error deleting department:', err);
-                      alert('Error deleting department: ' + (err.response?.data?.message || err.message));
-                    }
-                  }
-                }}>
-                  <Trash2 size={16} /> Delete Department
-                </button>
               </div>
             </div>
           </div>

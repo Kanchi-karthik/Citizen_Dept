@@ -1,5 +1,32 @@
 /* ========== DEPARTMENT DASHBOARD ========== */
 
+/* Department Component Container - Common container for all department components */
+.department-component-container {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+  display: block;
+  flex: 1 1 auto;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.department-component-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
 /* Step Tracker */
 .step-tracker {
   width: 100%;

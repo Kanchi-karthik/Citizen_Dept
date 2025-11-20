@@ -185,7 +185,7 @@ export default function PerformanceForm({ departmentId }) {
         }}
       >
         {({ isSubmitting, values }) => (
-          <Form className="form-container performance-form">
+          <Form className="performance-form">
             <div className="form-grid">
               <div className="form-group">
                 <label>Department *</label>

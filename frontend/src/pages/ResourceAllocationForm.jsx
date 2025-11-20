@@ -127,7 +127,7 @@ const ResourceAllocationForm = ({ departmentId }) => {
         }}
       >
         {({ isSubmitting }) => (
-          <Form className="form-container resource-form">
+          <Form className="resource-form">
             <div className="form-grid">
               <div className="form-group">
                 <label>Department *</label>
