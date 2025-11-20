@@ -15,7 +15,6 @@ const DepartmentSchema = new mongoose.Schema({
   employeeCount: { type: Number, required: true, min: 1 },
   isActive: { type: Boolean, default: true },
   // Login credentials
-  username: { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true },
 }, { timestamps: true });
 

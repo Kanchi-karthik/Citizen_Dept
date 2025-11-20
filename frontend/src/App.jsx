@@ -2,10 +2,6 @@ import React, { useState, createContext } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Sidebar from "./components/Sidebar.jsx";
-import UserList from "./pages/UserList.jsx";
-import ComplaintList from "./pages/ComplaintList.jsx";
-import ComplaintForm from "./pages/ComplaintForm.jsx";
-import FeedbackList from "./pages/FeedbackList.jsx";
 import DepartmentList from "./pages/DepartmentList.jsx";
 import DepartmentForm from "./pages/DepartmentForm.jsx";
 import DepartmentDashboard from "./pages/DepartmentDashboard.jsx";
@@ -46,10 +42,6 @@ const AppContent = () => {
       <div className={`main-content ${showMainSidebar ? (sidebarOpen ? "open" : "closed") : ""}`} 
            style={showMainSidebar ? {} : { marginLeft: 0, width: '100%' }}>
         <Routes>
-          <Route path="/users" element={<UserList />} />
-          <Route path="/complaints" element={<ComplaintList />} />
-          <Route path="/complaint-form" element={<ComplaintForm />} />
-          <Route path="/feedbacks" element={<FeedbackList />} />
           <Route path="/departments" element={<DepartmentList />} />
           <Route path="/department-form" element={<DepartmentForm />} />
           <Route path="/department/:id" element={<DepartmentDashboard />} />

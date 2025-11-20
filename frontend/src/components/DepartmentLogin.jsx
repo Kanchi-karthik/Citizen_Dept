@@ -96,6 +96,7 @@ const DepartmentLogin = () => {
         <div className="login-header">
           <h2>Department Login</h2>
           <p>Sign in to access your department dashboard</p>
+          <p className="text-muted small">You can log in with your username, email address, or phone number</p>
         </div>
         
         {error && (
@@ -171,7 +172,7 @@ const DepartmentLogin = () => {
             {({ isSubmitting, setFieldValue }) => (
               <Form className="login-form">
                 <div className="form-group">
-                  <label htmlFor="username">Username</label>
+                  <label htmlFor="username">Username, Email, or Phone Number</label>
                   <div className="input-with-icon">
                     <User size={18} />
                     <Field 
@@ -179,7 +180,7 @@ const DepartmentLogin = () => {
                       id="username" 
                       name="username" 
                       className="form-control" 
-                      placeholder="Enter your username"
+                      placeholder="Enter your username, email, or phone number"
                     />
                   </div>
                   <ErrorMessage name="username" component="div" className="text-danger small" />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { MapPin, TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Eye, Star, Package, X, Menu, Trash2 } from "lucide-react";
+import { MapPin, TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Eye, Star, Package, X, Menu, Trash2, EyeOff } from "lucide-react";
 import API from "../services/api";
 import DepartmentSidebar from "../components/DepartmentSidebar";
 import PerformanceForm from "./PerformanceForm";
@@ -48,6 +48,28 @@ const DepartmentDashboard = () => {
   
   // State for sidebar toggle
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // State for profile and password update forms
+  const [showProfileUpdateForm, setShowProfileUpdateForm] = useState(false);
+  const [showPasswordUpdateForm, setShowPasswordUpdateForm] = useState(false);
+  const [profileUpdateData, setProfileUpdateData] = useState({
+    headName: '',
+    contactEmail: '',
+    contactNumber: '',
+    city: '',
+    state: '',
+    address: '',
+    description: '',
+    website: ''
+  });
+  const [passwordUpdateData, setPasswordUpdateData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -76,6 +98,18 @@ const DepartmentDashboard = () => {
         const deptRes = await API.get(`/departments/${id}`);
         console.log("Department fetched:", deptRes.data);
         setDepartment(deptRes.data);
+        
+        // Initialize profile update data with current department data
+        setProfileUpdateData({
+          headName: deptRes.data.headName || '',
+          contactEmail: deptRes.data.contactEmail || '',
+          contactNumber: deptRes.data.contactNumber || '',
+          city: deptRes.data.city || '',
+          state: deptRes.data.state || '',
+          address: deptRes.data.address || '',
+          description: deptRes.data.description || '',
+          website: deptRes.data.website || ''
+        });
 
         // Fetch complaints for this department (using backend filtering)
         const complaintRes = await API.get(`/complaints?departmentId=${id}`);
@@ -124,6 +158,35 @@ const DepartmentDashboard = () => {
     if (id) {
       fetchDashboardData();
     }
+
+    // Add event listener for beforeunload to check authentication
+    const handleBeforeUnload = (e) => {
+      // Check if department is still authenticated
+      const storedDepartment = localStorage.getItem('department');
+      if (!storedDepartment) {
+        // User is not authenticated, redirect to login
+        navigate(`/department-login/${id}`);
+      }
+    };
+
+    // Add event listener for popstate (back/forward navigation)
+    const handlePopState = (e) => {
+      // Check if department is still authenticated
+      const storedDepartment = localStorage.getItem('department');
+      if (!storedDepartment) {
+        // User is not authenticated, redirect to login
+        navigate(`/department-login/${id}`);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [id, navigate]);
 
   const updateComplaintStatus = async (complaintId, newStatus) => {
@@ -268,7 +331,7 @@ const DepartmentDashboard = () => {
             let compressedImage = canvas.toDataURL('image/jpeg', quality);
             
             // If still too large, reduce quality further
-            while (compressedImage.length > 1024 * 1124 && quality > 0.3) {
+            while (compressedImage.length > 1024 * 112 && quality > 0.3) {
               quality -= 0.1;
               compressedImage = canvas.toDataURL('image/jpeg', quality);
             }
@@ -383,6 +446,49 @@ const DepartmentDashboard = () => {
     } catch (err) {
       console.error("Error adding resolution update:", err);
       alert("Failed to add resolution update: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await API.put(`/departments/${id}`, profileUpdateData);
+      setDepartment(res.data);
+      setShowProfileUpdateForm(false);
+      alert('Profile updated successfully');
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      alert("Failed to update profile: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      // Check if new passwords match
+      if (passwordUpdateData.newPassword !== passwordUpdateData.confirmNewPassword) {
+        alert("New passwords do not match");
+        return;
+      }
+      
+      // Send password update request
+      const res = await API.put(`/departments/${id}/password`, {
+        currentPassword: passwordUpdateData.currentPassword,
+        newPassword: passwordUpdateData.newPassword
+      });
+      
+      // Reset password form
+      setPasswordUpdateData({
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: ''
+      });
+      
+      setShowPasswordUpdateForm(false);
+      alert('Password updated successfully');
+    } catch (err) {
+      console.error("Error updating password:", err);
+      alert("Failed to update password: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -814,6 +920,203 @@ const DepartmentDashboard = () => {
             <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>Department Settings</h2>
             <div className="settings-container">
               <div className="settings-section">
+                <h3>Profile Information</h3>
+                <p>Update your department's profile information.</p>
+                {!showProfileUpdateForm ? (
+                  <button className="btn btn-primary" onClick={() => setShowProfileUpdateForm(true)}>
+                    Update Profile
+                  </button>
+                ) : (
+                  <form onSubmit={handleProfileUpdate} className="settings-form">
+                    <div className="form-group">
+                      <label>Head Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profileUpdateData.headName}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, headName: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Contact Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={profileUpdateData.contactEmail}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, contactEmail: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Contact Number</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profileUpdateData.contactNumber}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, contactNumber: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>City</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profileUpdateData.city}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, city: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>State</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profileUpdateData.state}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, state: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Address</label>
+                      <textarea
+                        className="form-control"
+                        value={profileUpdateData.address}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, address: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Description</label>
+                      <textarea
+                        className="form-control"
+                        value={profileUpdateData.description}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, description: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Website</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        value={profileUpdateData.website}
+                        onChange={(e) => setProfileUpdateData({...profileUpdateData, website: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button type="submit" className="btn btn-primary">Save Profile</button>
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowProfileUpdateForm(false)}>Cancel</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+              
+              <div className="settings-section">
+                <h3>Login Credentials</h3>
+                <p>Update your department's login credentials.</p>
+                {!showPasswordUpdateForm ? (
+                  <button className="btn btn-primary" onClick={() => setShowPasswordUpdateForm(true)}>
+                    Update Password
+                  </button>
+                ) : (
+                  <form onSubmit={handlePasswordUpdate} className="settings-form">
+                    <div className="form-group">
+                      <label>Current Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showCurrentPassword ? "text" : "password"}
+                          className="form-control"
+                          value={passwordUpdateData.currentPassword}
+                          onChange={(e) => setPasswordUpdateData({...passwordUpdateData, currentPassword: e.target.value})}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            minWidth: '40px'
+                          }}
+                        >
+                          {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          className="form-control"
+                          value={passwordUpdateData.newPassword}
+                          onChange={(e) => setPasswordUpdateData({...passwordUpdateData, newPassword: e.target.value})}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            minWidth: '40px'
+                          }}
+                        >
+                          {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Confirm New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="form-control"
+                          value={passwordUpdateData.confirmNewPassword}
+                          onChange={(e) => setPasswordUpdateData({...passwordUpdateData, confirmNewPassword: e.target.value})}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            minWidth: '40px'
+                          }}
+                        >
+                          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button type="submit" className="btn btn-primary">Save Password</button>
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowPasswordUpdateForm(false)}>Cancel</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+              
+              <div className="settings-section">
                 <h3>Department Information</h3>
                 <p>Manage your department's profile and settings.</p>
                 <button className="btn btn-danger" onClick={async () => {
@@ -831,41 +1134,6 @@ const DepartmentDashboard = () => {
                 }}>
                   <Trash2 size={16} /> Delete Department
                 </button>
-              </div>
-              
-              <div className="settings-section">
-                <h3>Login Credentials</h3>
-                <p>Update your department's login credentials.</p>
-                <button className="btn btn-primary" onClick={() => {
-                  // Navigate to department edit form
-                  setActiveTab('dashboard');
-                  // Scroll to the edit form
-                  setTimeout(() => {
-                    const editForm = document.getElementById('department-edit-form');
-                    if (editForm) {
-                      editForm.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }, 100);
-                }}>
-                  Update Login Credentials
-                </button>
-              </div>
-              
-              <div className="settings-section">
-                <h3>Preferences</h3>
-                <p>Customize your department panel preferences.</p>
-                <div className="form-group">
-                  <label>
-                    <input type="checkbox" defaultChecked /> 
-                    Enable email notifications
-                  </label>
-                </div>
-                <div className="form-group">
-                  <label>
-                    <input type="checkbox" defaultChecked /> 
-                    Enable SMS notifications
-                  </label>
-                </div>
               </div>
             </div>
           </div>

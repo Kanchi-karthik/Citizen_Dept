@@ -5,10 +5,15 @@ import "../styles/app.css";
 const DepartmentSidebar = ({ deptName, activeTab, setActiveTab, onClose }) => {
   // Function to exit from department UI
   const exitDepartment = () => {
-    // Clear department authentication
-    localStorage.removeItem('department');
-    // Navigate to the home page or main dashboard
-    window.location.href = '/';
+    // Show confirmation dialog
+    const confirmExit = window.confirm("Are you sure you want to exit the department panel? You will be logged out and redirected to the main page.");
+    
+    if (confirmExit) {
+      // Clear department authentication
+      localStorage.removeItem('department');
+      // Navigate to the home page or main dashboard
+      window.location.href = '/';
+    }
   };
 
   return (

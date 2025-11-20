@@ -18,18 +18,15 @@ const PerfSchema = Yup.object().shape({
   pendingComplaints: Yup.number().required('Pending complaints required').min(0, 'Must be >= 0'),
   rejectedComplaints: Yup.number().min(0, 'Must be >= 0'),
   
-  avgResolutionTime: Yup.number().required('Avg resolution time required').min(0, 'Must be >= 0'),
   minResolutionTime: Yup.number().min(0, 'Must be >= 0'),
   maxResolutionTime: Yup.number().min(0, 'Must be >= 0'),
   responseTime: Yup.number().required('Response time required').min(0, 'Must be >= 0'),
   targetResolutionDays: Yup.number().required('Target resolution days required').min(1, 'Must be >= 1'),
   
-  budgetUtilization: Yup.number().required('Budget utilization required').min(0, 'Must be >= 0').max(100, 'Must be <= 100'),
   allocatedBudget: Yup.number().min(0, 'Must be >= 0'),
   spentBudget: Yup.number().min(0, 'Must be >= 0'),
   
   citizenSatisfactionScore: Yup.number().required('Satisfaction score required').min(0, 'Must be >= 0').max(5, 'Must be <= 5'),
-  complaintResolutionRate: Yup.number().min(0, 'Must be >= 0').max(100, 'Must be <= 100'),
   rework: Yup.number().min(0, 'Must be >= 0'),
   
   performanceRating: Yup.string().required('Performance rating required'),
@@ -56,18 +53,15 @@ export default function PerformanceForm({ departmentId }) {
     pendingComplaints: 0,
     rejectedComplaints: 0,
     
-    avgResolutionTime: 0,
     minResolutionTime: 0,
     maxResolutionTime: 0,
     responseTime: 0,
     targetResolutionDays: 0,
     
-    budgetUtilization: 0,
     allocatedBudget: 0,
     spentBudget: 0,
     
     citizenSatisfactionScore: 0,
-    complaintResolutionRate: 0,
     rework: 0,
     
     performanceRating: 'Good',
@@ -116,16 +110,13 @@ export default function PerformanceForm({ departmentId }) {
       resolvedComplaints: record.resolvedComplaints || 0,
       pendingComplaints: record.pendingComplaints || 0,
       rejectedComplaints: record.rejectedComplaints || 0,
-      avgResolutionTime: record.avgResolutionTime || 0,
       minResolutionTime: record.minResolutionTime || 0,
       maxResolutionTime: record.maxResolutionTime || 0,
       responseTime: record.responseTime || 0,
       targetResolutionDays: record.targetResolutionDays || 0,
-      budgetUtilization: record.budgetUtilization || 0,
       allocatedBudget: record.allocatedBudget || 0,
       spentBudget: record.spentBudget || 0,
       citizenSatisfactionScore: record.citizenSatisfactionScore || 0,
-      complaintResolutionRate: record.complaintResolutionRate || 0,
       rework: record.rework || 0,
       performanceRating: record.performanceRating || 'Good',
       status: record.status || 'Completed',
@@ -299,12 +290,6 @@ export default function PerformanceForm({ departmentId }) {
 
               {/* RESOLUTION TIME METRICS */}
               <div className="form-group">
-                <label>Avg Resolution Time (days) *</label>
-                <Field name="avgResolutionTime" type="number" className="form-control" min="0" step="any" />
-                <ErrorMessage name="avgResolutionTime" component="div" className="text-danger small" />
-              </div>
-
-              <div className="form-group">
                 <label>Min Resolution Time (days)</label>
                 <Field name="minResolutionTime" type="number" className="form-control" min="0" step="any" />
                 <ErrorMessage name="minResolutionTime" component="div" className="text-danger small" />
@@ -328,12 +313,6 @@ export default function PerformanceForm({ departmentId }) {
                 <ErrorMessage name="targetResolutionDays" component="div" className="text-danger small" />
               </div>
 
-              <div className="form-group">
-                <label>Complaint Resolution Rate (%) </label>
-                <Field name="complaintResolutionRate" type="number" className="form-control" min="0" max="100" step="any" />
-                <ErrorMessage name="complaintResolutionRate" component="div" className="text-danger small" />
-              </div>
-
               {/* BUDGET & RESOURCE METRICS */}
               <div className="form-group">
                 <label>Allocated Budget (₹)</label>
@@ -345,12 +324,6 @@ export default function PerformanceForm({ departmentId }) {
                 <label>Spent Budget (₹)</label>
                 <Field name="spentBudget" type="number" className="form-control" min="0" step="any" />
                 <ErrorMessage name="spentBudget" component="div" className="text-danger small" />
-              </div>
-
-              <div className="form-group">
-                <label>Budget Utilization (%) *</label>
-                <Field name="budgetUtilization" type="number" className="form-control" min="0" max="100" step="any" />
-                <ErrorMessage name="budgetUtilization" component="div" className="text-danger small" />
               </div>
 
               <div className="form-group">
@@ -447,8 +420,6 @@ export default function PerformanceForm({ departmentId }) {
                 <th>Date Range</th>
                 <th>Total Complaints</th>
                 <th>Resolved/Pending</th>
-                <th>Avg Resolution</th>
-                <th>Budget Util.</th>
                 <th>Rating</th>
                 <th>Satisfaction</th>
                 <th>Status</th>
@@ -466,18 +437,12 @@ export default function PerformanceForm({ departmentId }) {
                     <td><small>{dateRange}</small></td>
                     <td>{r.totalComplaints}</td>
                     <td>{r.resolvedComplaints}/{r.pendingComplaints}</td>
-                    <td>{r.avgResolutionTime.toFixed(1)} days</td>
-                    <td>
-                      <div style={{width: '60px', height: '20px', backgroundColor: '#e0f2f1', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem'}}>
-                        {r.budgetUtilization}%
-                      </div>
-                    </td>
                     <td>
                       <span className="badge" style={{backgroundColor: r.performanceRating === 'Excellent' ? '#27ae60' : r.performanceRating === 'Very Good' ? '#2ecc71' : r.performanceRating === 'Good' ? '#005b5f' : r.performanceRating === 'Satisfactory' ? '#f39c12' : '#e74c3c'}}>
                         {r.performanceRating}
                       </span>
                     </td>
-                    <td>                    <Star size={16} style={{ display: 'inline', marginRight: '0.25rem' }} />
+                    <td><Star size={16} style={{ display: 'inline', marginRight: '0.25rem' }} />
                     <span>{r.citizenSatisfactionScore}/5</span></td>
                     <td>
                       <span className="badge" style={{backgroundColor: r.status === 'Completed' ? '#27ae60' : r.status === 'Ongoing' ? '#3498db' : r.status === 'On Hold' ? '#f39c12' : '#95a5a6'}}>
