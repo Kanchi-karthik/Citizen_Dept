@@ -541,6 +541,11 @@ const DepartmentDashboard = () => {
     .sort((a, b) => b.complaints - a.complaints)
     .slice(0, 10);
 
+  // Calculate resolution rate
+  const resolutionRate = stats.totalComplaints > 0 
+    ? Math.round((stats.resolvedComplaints / stats.totalComplaints) * 100) 
+    : 0;
+
   return (
     <div className="dashboard-with-sidebar">
       {sidebarOpen ? (
@@ -586,7 +591,7 @@ const DepartmentDashboard = () => {
                 <div className="kpi-content">
                   <p className="kpi-label">Resolved</p>
                   <h3 className="kpi-value">{stats.resolvedComplaints}</h3>
-                  <p className="kpi-percent">{stats.totalComplaints > 0 ? Math.round((stats.resolvedComplaints / stats.totalComplaints) * 100) : 0}%</p>
+                  <p className="kpi-percent">{resolutionRate}%</p>
                 </div>
               </div>
 
@@ -704,11 +709,11 @@ const DepartmentDashboard = () => {
                   </div>
                   <div className="metric">
                     <label>Resolution Rate</label>
-                    <div className="metric-value">{performance.complaintResolutionRate}%</div>
+                    <div className="metric-value">{resolutionRate}%</div>
                   </div>
                   <div className="metric">
                     <label>Budget Utilization</label>
-                    <div className="metric-value">{performance.budgetUtilization}%</div>
+                    <div className="metric-value">{performance.budgetUtilization || 0}%</div>
                   </div>
                   <div className="metric">
                     <label>Performance Rating</label>
@@ -748,8 +753,11 @@ const DepartmentDashboard = () => {
                           <td>
                             <span className={`badge ${
                               complaint.status === 'Resolved' ? 'bg-success' : 
-                              complaint.status === 'Pending' ? 'bg-warning' : 
-                              complaint.status === 'In Progress' ? 'bg-info' : 'bg-secondary'
+                              complaint.status === 'New' ? 'bg-secondary' : 
+                              complaint.status === 'Accepted' ? 'bg-primary' : 
+                              complaint.status === 'Working' ? 'bg-info' : 
+                              complaint.status === 'On Hold' ? 'bg-warning' : 
+                              complaint.status === 'Closed' ? 'bg-dark' : 'bg-secondary'
                             }`}>
                               {complaint.status}
                             </span>
